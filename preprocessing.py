@@ -498,6 +498,7 @@ if __name__ == '__main__':
     # create_raw(is_hl=True)
 
     #   > Majority Vote subjects ratings
+
     df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
     majority_objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
     majority_objective_df.drop(majority_objective_df.columns[[0,1,4,5,6,7,8,9]], axis=1, inplace=True)

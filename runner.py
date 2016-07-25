@@ -149,8 +149,8 @@ if __name__ == '__main__':
                 run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
                 is_slice_for_specific_blendshapes=False, which_blendshapes=GOOD_BLENDSHAPES,
 
-                run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
+                run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
-                is_model_for_each_subject=True, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(1,10),
+                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(1,10),
                 learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-                is_second_learner=False, is_majority_vote=True)     # to use is_majority_vote set obj_or_subj='obj'
+                is_second_learner=False, is_majority_vote=False)                                     # to use is_majority_vote set obj_or_subj='obj'

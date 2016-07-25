@@ -220,3 +220,13 @@ def count_peaks(v, delta=0.1, x = None):
 def get_majoity(list):
     # returns the majority vote.
     return max(set(list), key=list.count)
+
+def get_pos_or_neg(list):
+    # returns a quantized yes/no (for rewatch, likeability) - 0 or 1
+    return_list = []
+    for i in list:
+        if i >= 2:
+            return_list.append(1.0)
+        else:
+            return_list.append(0.0)
+    return return_list

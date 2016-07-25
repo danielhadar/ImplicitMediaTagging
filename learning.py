@@ -373,7 +373,7 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                     tmp_x = feature_selection(X, fs_model_name, n_components=np.shape(X)[1])
 
                 x_arr.append(tmp_x)
-            # x_arr.append(X_misc)
+            x_arr.append(X_misc)
 
             feat = np.concatenate(x_arr, axis=1)    # <<<
 

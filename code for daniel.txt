@@ -1,0 +1,95 @@
+#-----quantization features/dynamic features--------------
+
+def quantizeData(rawData,n_quants=4,QuantizationMethod='random'):
+        print('Quantazing data..')
+        quantizedDF=DF(index=rawData.index)
+        MethodDetails={'NumOfQuants':n_quants,'QuantizationMethod':QuantizationMethod}
+        Smoothed=rawData-0.2
+        Smoothed[Smoothed<0]=0
+        for columns in rawData:
+            Quantized=cluster.vq.kmeans2(Smoothed.values ,n_quants, iter=10, thresh=1e-02, minit=QuantizationMethod, missing='warn')
+            quantizedDF[columns]=Quantized[1]
+        return quantizedDF, MethodDetails
+
+@staticmethod
+def getTransMatrix(SubjectQuantizedData,numOfQuants): 
+            """ calcs transition matrix over columns of quantized dataframe  returns a dict with transmatrix for each column of Data """     
+            #used for calculating quantized features  - ChangeRatio, FastChangeRatio
+            from collections import Counter
+            qData=SubjectQuantizedData       
+            k=numOfQuants
+            TransMatrixDict=dict.fromkeys(qData.columns)
+            for col in qData:
+                vec=qData[col]
+                TransMatrix=np.zeros([k,k])
+                for (x,y), c in Counter(zip(vec, vec[1:])).iteritems(): 
+                    TransMatrix[x-1,y-1] = c
+                TransMatrixDict[col]=TransMatrix
+            return TransMatrixDict
+
+def countBlocks(SubjectBinaryData):
+        """ takes binary DF and returns for each column the number of blocks, their length, etc.."""
+        bData=SubjectBinaryData*1 
+        BlocksDF=DF(columns=bData.columns,index=['NumOfBlocks','meanBlockLength','stdBlockLength']) #save summary of block details on each column
+        BlocksDetails=dict.fromkeys(bData.columns) #save full details about blocks for each column
+        DF0=DF([0]*len(bData.columns),index=bData.columns).T
+        bData=DF0.append(bData.append(DF0)) #add 0 in the begining and in the end of the vector
+        for col in bData:
+            vec=np.array(bData[col])            
+            diffvec=np.diff(vec)
+            blockStart=np.where(diffvec==1)[0]
+            blockEnd=np.where(diffvec==-1)[0]
+            #fix first and last frames            
+            if blockStart.size==0 or blockEnd.size==0: #if there are no blocks
+                numOfBlocks=0
+                BlockLength=np.array([0])
+            else:                    
+                if blockStart[0]>blockEnd[0]: #if there's an end of the block before the start ignore it. 
+                    blockStart=np.append(0,blockStart)
+#                    print('** 0 appended to start')
+                if blockStart[-1]>blockEnd[-1]: #if the block starts after the last end, ignore it.        
+                    blockEnd=np.append(blockEnd,len(vec))
+#                    print('** ' + str(len(vec)) + ' appended to end')
+                numOfBlocks=len(blockEnd)
+                if len(blockEnd)!=len(blockStart):
+                    print(blockEnd)
+                    print(blockStart)
+                    print(vec)
+                    
+                BlockLength=blockEnd-blockStart
+                #save into dict
+                BlocksDetails[col]= DF({'1BlockStartIndex':blockStart,'2BlockEndIndex':blockEnd,'3BlockLength':BlockLength}, index=range(numOfBlocks)).T
+
+            #save summary as DF
+            BlocksDF[col].loc['NumOfBlocks']=numOfBlocks
+            BlocksDF[col].loc['meanBlockLength']=BlockLength.mean()
+            BlocksDF[col].loc['stdBlockLength']=BlockLength.std()
+        return BlocksDF.T, BlocksDetails
+
+def calcQuantizationFeatures(subjectQuantizedData,n_quants):
+            sData=subjectQuantizedData
+            cols=sData.columns
+            ExpressionInd=sData!=0 
+            ExpressionRatio=ExpressionInd.sum()/len(sData)
+            ExpressionLevel=sData[ExpressionInd].mean()/3
+            [Blocks,_]=featuresUtils.countBlocks(sData>0)
+            ExpressionLength=Blocks['meanBlockLength']
+
+            #calc feature using transition matrix:
+            TransitionMatrix=featuresUtils.getTransMatrix(sData,n_quants)           
+            ChangeRatio=Series(index=cols)
+            FastChangeRatio=Series(index=cols)
+            for col in cols:
+                T=TransitionMatrix[col]
+                N=sum(sum(T))
+                ChangeFrames=N-(sum(np.diagonal(T)))
+                SlowChangeFrames=sum(np.diagonal(T,offset=1,axis1=1,axis2=0)+np.diagonal(T,offset=1))
+                FastChangeFrames=ChangeFrames-SlowChangeFrames
+                ChangeRatio[col]=ChangeFrames/(N-T[0,0])
+                FastChangeRatio[col]=FastChangeFrames/ChangeFrames
+            subjectFeaturesSeries=DF([ExpressionRatio,ExpressionLevel,ExpressionLength,ChangeRatio,FastChangeRatio],index=['ExpressionRatio','ExpressionLevel','ExpressionLength','ChangeRatio','FastChangeRatio'])
+            subjectFeaturesSeries=subjectFeaturesSeries.unstack().swaplevel(0,1)
+
+            return subjectFeaturesSeries
+
+#-------------------------------------

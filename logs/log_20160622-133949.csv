@@ -1,0 +1,35 @@
+Start Time: 13:39:49
+run_preprocessing=False 
+run_features=False 
+SVR, LeaveOneClipOutForEachSubject, pca2, valence    , True, True, 0.055, 0.236, -0.117
+SVR, LeaveOneClipOutForEachSubject, pca3, valence    , True, True, 0.007, 0.881, -0.187
+SVR, LeaveOneClipOutForEachSubject, pca4, valence    , True, True, 0.081, 0.080, -0.133
+SVR, LeaveOneClipOutForEachSubject, pca5, valence    , True, True, 0.021, 0.658, -0.199
+SVR, LeaveOneClipOutForEachSubject, pca6, valence    , True, True, 0.059, 0.201, -0.154
+SVR, LeaveOneClipOutForEachSubject, pca7, valence    , True, True, 0.073, 0.117, -0.135
+SVR, LeaveOneClipOutForEachSubject, pca8, valence    , True, True, 0.137, 0.003, -0.079
+SVR, LeaveOneClipOutForEachSubject, pca9, valence    , True, True, 0.073, 0.115, -0.142
+SVR, LeaveOneClipOutForEachSubject, pca2, arousal    , True, True, 0.168, 0.000, -0.034
+SVR, LeaveOneClipOutForEachSubject, pca3, arousal    , True, True, 0.160, 0.000, -0.076
+SVR, LeaveOneClipOutForEachSubject, pca4, arousal    , True, True, 0.164, 0.000, -0.099
+SVR, LeaveOneClipOutForEachSubject, pca5, arousal    , True, True, 0.181, 0.000, -0.064
+SVR, LeaveOneClipOutForEachSubject, pca6, arousal    , True, True, 0.199, 0.000, -0.034
+SVR, LeaveOneClipOutForEachSubject, pca7, arousal    , True, True, 0.204, 0.000, -0.022
+SVR, LeaveOneClipOutForEachSubject, pca8, arousal    , True, True, 0.245, 0.000, 0.009
+SVR, LeaveOneClipOutForEachSubject, pca9, arousal    , True, True, 0.192, 0.000, -0.033
+SVR, LeaveOneClipOutForEachSubject, pca2, likeability, True, True, 0.086, 0.064, -0.116
+SVR, LeaveOneClipOutForEachSubject, pca3, likeability, True, True, 0.061, 0.189, -0.152
+SVR, LeaveOneClipOutForEachSubject, pca4, likeability, True, True, 0.096, 0.037, -0.132
+SVR, LeaveOneClipOutForEachSubject, pca5, likeability, True, True, 0.020, 0.660, -0.210
+SVR, LeaveOneClipOutForEachSubject, pca6, likeability, True, True, 0.094, 0.041, -0.123
+SVR, LeaveOneClipOutForEachSubject, pca7, likeability, True, True, 0.121, 0.009, -0.096
+SVR, LeaveOneClipOutForEachSubject, pca8, likeability, True, True, 0.108, 0.020, -0.104
+SVR, LeaveOneClipOutForEachSubject, pca9, likeability, True, True, 0.076, 0.101, -0.143
+SVR, LeaveOneClipOutForEachSubject, pca2, rewatch    , True, True, 0.160, 0.001, -0.087
+SVR, LeaveOneClipOutForEachSubject, pca3, rewatch    , True, True, 0.097, 0.037, -0.145
+SVR, LeaveOneClipOutForEachSubject, pca4, rewatch    , True, True, 0.131, 0.005, -0.114
+SVR, LeaveOneClipOutForEachSubject, pca5, rewatch    , True, True, 0.068, 0.144, -0.185
+SVR, LeaveOneClipOutForEachSubject, pca6, rewatch    , True, True, 0.111, 0.017, -0.132
+SVR, LeaveOneClipOutForEachSubject, pca7, rewatch    , True, True, 0.120, 0.009, -0.118
+SVR, LeaveOneClipOutForEachSubject, pca8, rewatch    , True, True, 0.146, 0.001, -0.084
+SVR, LeaveOneClipOutForEachSubject, pca9, rewatch    , True, True, 0.100, 0.031, -0.135

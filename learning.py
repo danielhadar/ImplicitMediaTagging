@@ -416,7 +416,6 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
 
         # feature selection over all features
         # feat = feature_selection(feat, fs_model_name, n_components=fs_n_components)
-
         r2, (pearsonr_val, pearsonr_p_val), (spearman_val, spearman_p_val) \
             = run(feat, Y, learning_model_name, cv_model_name,
                   is_scaled=True, is_normalized=True, f=f,

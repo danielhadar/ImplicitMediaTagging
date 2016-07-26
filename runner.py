@@ -10,6 +10,7 @@ warnings.filterwarnings("ignore")
 # LEARNING_MODELS = ['linear_regression', 'ridge', 'lasso', 'SVR', 'NuSVR']
 # LEARNING_MODELS = ['linear_regression', 'ridge            ', 'SVR              ']
 LEARNING_MODELS = ['linear_regression', 'ridge            ']
+# LEARNING_MODELS = ['SVC']
 # LEARNING_MODELS = ['SVR']
 # LEARNING_MODELS = ['ridge']
 # LEARNING_MODELS = ['linear_regression']
@@ -23,6 +24,7 @@ CV_MODELS = ['LeaveOneClipOutForAllSubject']
 
 
 RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewatch    ',3)]
+# RATINGS_AXES = [('likeability',2), ('rewatch    ',3)]
 # RATINGS_AXES = [('rewatch',3)]
 
 # FS_MODELS = ['none', 'pca']
@@ -150,7 +152,7 @@ if __name__ == '__main__':
                 is_slice_for_specific_blendshapes=False, which_blendshapes=GOOD_BLENDSHAPES,
 
                 run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
-                is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
+                is_both_for_obj=True, scale_y=False, scale_x=True, use_single_predicted_Y_foreach_clip=True,
                 is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(1,10),
                 learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
                 is_second_learner=False, is_majority_vote=False)                                     # to use is_majority_vote set obj_or_subj='obj'

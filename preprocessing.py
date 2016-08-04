@@ -341,7 +341,33 @@ def create_raw(is_hl):
 def get_smart_hl_pivot_ind(data, hl_win_size):
     # return the index (in terms of ind) with the most interesting environment
     # data is the 'watch' part of a single subject's single clip
-    data.to_csv('a.csv')
+
+    # blink_times = [i[0] for i in find_peaks(data['EyeBlink_L'], delta=0.5)]
+    # print(blink_times)
+    # a = []
+    # for t in range(int(data['time'].tail(1)) - hl_win_size + 1):
+    #     cur_data = data[(data['time'] > t) & (data['time'] <= (t + hl_win_size))]
+    #
+    #     bt = [i[0] for i in find_peaks(cur_data['EyeBlink_L'], delta=0.5)]
+    #
+    #     sm = cur_data['MouthSmile_R'].mean()
+    #     sv = cur_data['MouthSmile_R'].var()
+    #
+    #     a.append((t, len(bt), sm, sv))
+    #
+    # bts = scale_list([i[1] for i in a])
+    # sms = scale_list([i[2] for i in a])
+    # svs = scale_list([i[3] for i in a])
+    # print([i[2] for i in a])
+    # print(sms)
+
+
+    # for (t, bt, sm, sv) in a:
+    #     print("%i, %i, %.2f, %.2f" % (t, bt, sm, sv))
+    # for i in range(len(a)):
+    #     print("%i, %.2f, %.2f, %.2f" % (a[i][0], bts[i], sms[i], svs[i]))
+
+    data.to_csv('b.csv')
     quit()
 
     pass
@@ -361,6 +387,8 @@ def set_window_size(hl_margins, is_smart_hl):
 
     # for idx, data in raw_df.groupby(level=[0,1,2], sort=False):
     for idx, data in raw_df[raw_df.new_response_type == 'watch'].groupby(level=[0,1,2], sort=False):
+        # if idx != ('203025663', '10', 'watch'):
+        #     continue
 
         # gets the index to build the hl window around it
         hl_pivot_ind = get_smart_hl_pivot_ind(data, sum(hl_margins)) \

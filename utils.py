@@ -33,6 +33,9 @@ GOOD_BLENDSHAPES = ['EyeBlink_L', 'EyeBlink_R','EyeIn_L', 'EyeIn_R', 'BrowsU_C',
                     'MouthDimple_R', 'LipsStretch_L', 'LipsStretch_R', 'LipsUpperUp', 'LipsFunnel', 'ChinLowerRaise',
                     'Sneer', 'CheekSquint_L', 'CheekSquint_R']      # len = 24
 
+MY_BS = ['EyeBlink_L', 'EyeBlink_R', 'MouthSmile_L', 'MouthSmile_R', 'MouthDimple_L', 'MouthDimple_R', 'LipsStretch_L',
+               'LipsStretch_R', 'Sneer_L', 'Sneer_R']
+
 SUBJECTS_IDS = ['311461917', '304835366', '304854938', '315688713', '204058010', '203237607', '204033971', '203025663',
                 '203931639', '308286285', '315823492', '203667092', '312282494', '304957913', '200398733', '332521830',
                 '336079314', '317857084', '311357735', '204713721', '337835383', '203712351', '305584989', '308476639',
@@ -73,6 +76,10 @@ def slice_features_df_for_specific_blendshapes(df, blendshapes_list):
             new_columns_list.append('time')
         elif col == 'is_locked':
             new_columns_list.append('is_locked')
+        elif col == 'ind':
+            new_columns_list.append('ind')
+        elif col == 'new_response_type':
+            new_columns_list.append('new_response_type')
 
         else:
             for b in blendshapes_list:
@@ -92,6 +99,19 @@ def scale(val):
     if max(val)-min(val) == 0:
         return val
     return ((val - min(val)) / (max(val)-min(val))) * (top-bot) + bot
+
+def scale_list(l):
+    """
+    Scale the given value from the scale of val to the scale of bot-top.
+    """
+    bot = 0
+    top = 1
+
+    if max(l)-min(l) == 0:
+        return l
+    for idx,val in enumerate(l):
+        l[idx] = ((val - min(l)) / (max(l)-min(l))) * (top-bot) + bot
+    return l
 
 def my_pow(val):
     return val**2

@@ -68,6 +68,13 @@ def create_moments_df_from_raw_df(raw_df, create_over_segmentized):
             tmp_skew_df.loc[subj_id, org_clip_id].iloc[:,3:] = skew_df.loc[subj_id, org_clip_id].values
             tmp_kurt_df.loc[subj_id, org_clip_id].iloc[:,3:] = kurt_df.loc[subj_id, org_clip_id].values
 
+        # remove lines where clip_id is '9' and not '9_?'. The reason is that when calculating moments over the
+        # entire watching time, the un-sub-segmented clip remains.
+        tmp_mean_df = tmp_mean_df[tmp_mean_df.clip_id.str.contains('_')]
+        tmp_var_df = tmp_var_df[tmp_var_df.clip_id.str.contains('_')]
+        tmp_skew_df = tmp_skew_df[tmp_skew_df.clip_id.str.contains('_')]
+        tmp_kurt_df = tmp_kurt_df[tmp_kurt_df.clip_id.str.contains('_')]
+
         # change clip_id to be index again and discard org_clip_id
         tmp_mean_df.reset_index(level=['org_clip_id'], inplace=True)
         tmp_mean_df.drop('org_clip_id', axis=1, inplace=True)
@@ -86,6 +93,7 @@ def create_moments_df_from_raw_df(raw_df, create_over_segmentized):
         var_df = tmp_var_df.groupby(level=[0,1]).first().iloc[:,2:]
         skew_df = tmp_skew_df.groupby(level=[0,1]).first().iloc[:,2:]
         kurt_df = tmp_kurt_df.groupby(level=[0,1]).first().iloc[:,2:]
+
 
 
     # rename columns and stitch together
@@ -297,7 +305,7 @@ def count_smiles(df, th=0.75):
 # --------------------------
 
 def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
-                    create_moments_over_segmentized=False):
+                    create_moments_over_hl=False, create_moments_over_segmentized=False):
 
     ratings_df, big5_df, objective_df, raw_df, hl_df = load_all_dfs(org=False)
     raw_df_no_slice = raw_df.copy()
@@ -310,7 +318,13 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
     if use_hl:
         # -- moments features --
         print(" -- Moments -- ")
-        df = create_moments_df_from_raw_df(hl_df.xs('hl', level=2), create_over_segmentized=create_moments_over_segmentized)
+        if create_moments_over_hl:
+            # either moments are calculated over the 'hl' part only or over the entire watching time ('watch'+'hl')
+            df = create_moments_df_from_raw_df(hl_df.xs('hl', level=2), create_over_segmentized=create_moments_over_segmentized)
+        else:
+            df = create_moments_df_from_raw_df(
+                hl_df[hl_df.index.get_level_values('response_type').isin(['watch', 'hl'])].reset_index(level=2, drop=True),
+                create_over_segmentized=create_moments_over_segmentized)
         export_df_to_pickle(df, PICKLES_FOLDER + '/features/moments_features_hl.pickle')
 
         # -- quantized the data --

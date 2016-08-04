@@ -148,11 +148,11 @@ if __name__ == '__main__':
 
                 run_segmentize=False, is_hl=True, segments_length=50,                                # to avoid hl start here
 
-                run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
-                is_slice_for_specific_blendshapes=False, which_blendshapes=GOOD_BLENDSHAPES,
+                run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+                is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS,
 
                 run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=False, scale_x=True, use_single_predicted_Y_foreach_clip=True,
-                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(1,10),
+                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(2,8),
                 learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
                 is_second_learner=False, is_majority_vote=False)                                     # to use is_majority_vote set obj_or_subj='obj'

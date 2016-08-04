@@ -1,53 +1,53 @@
-Start Time: 22:03:47
+Start Time: 22:31:22
 run_preprocessing=False 
 set_win_size=False 
 run_segmentize=False 
-run_features=True, with: is_hl=True , specific_blendshapes=True 
-linear_regression, LeaveOneClipOutForAllSubject, pca2, valence    , False, True, 0.302, 0.000, 0.091
-ridge            , LeaveOneClipOutForAllSubject, pca2, valence    , False, True, 0.300, 0.000, 0.076
-linear_regression, LeaveOneClipOutForAllSubject, pca3, valence    , False, True, 0.322, 0.000, 0.103
-ridge            , LeaveOneClipOutForAllSubject, pca3, valence    , False, True, 0.319, 0.000, 0.086
-linear_regression, LeaveOneClipOutForAllSubject, pca4, valence    , False, True, 0.323, 0.000, 0.103
-ridge            , LeaveOneClipOutForAllSubject, pca4, valence    , False, True, 0.322, 0.000, 0.088
-linear_regression, LeaveOneClipOutForAllSubject, pca5, valence    , False, True, 0.315, 0.000, 0.097
-ridge            , LeaveOneClipOutForAllSubject, pca5, valence    , False, True, 0.314, 0.000, 0.085
-linear_regression, LeaveOneClipOutForAllSubject, pca6, valence    , False, True, 0.336, 0.000, 0.111
-ridge            , LeaveOneClipOutForAllSubject, pca6, valence    , False, True, 0.324, 0.000, 0.090
-linear_regression, LeaveOneClipOutForAllSubject, pca7, valence    , False, True, 0.332, 0.000, 0.107
-ridge            , LeaveOneClipOutForAllSubject, pca7, valence    , False, True, 0.325, 0.000, 0.091
-linear_regression, LeaveOneClipOutForAllSubject, pca2, arousal    , False, True, 0.187, 0.000, 0.031
-ridge            , LeaveOneClipOutForAllSubject, pca2, arousal    , False, True, 0.187, 0.000, 0.032
-linear_regression, LeaveOneClipOutForAllSubject, pca3, arousal    , False, True, 0.177, 0.000, 0.023
-ridge            , LeaveOneClipOutForAllSubject, pca3, arousal    , False, True, 0.186, 0.000, 0.033
-linear_regression, LeaveOneClipOutForAllSubject, pca4, arousal    , False, True, 0.159, 0.001, 0.012
-ridge            , LeaveOneClipOutForAllSubject, pca4, arousal    , False, True, 0.170, 0.000, 0.028
-linear_regression, LeaveOneClipOutForAllSubject, pca5, arousal    , False, True, 0.175, 0.000, 0.018
-ridge            , LeaveOneClipOutForAllSubject, pca5, arousal    , False, True, 0.180, 0.000, 0.032
-linear_regression, LeaveOneClipOutForAllSubject, pca6, arousal    , False, True, 0.186, 0.000, 0.021
-ridge            , LeaveOneClipOutForAllSubject, pca6, arousal    , False, True, 0.206, 0.000, 0.041
-linear_regression, LeaveOneClipOutForAllSubject, pca7, arousal    , False, True, 0.172, 0.000, 0.010
-ridge            , LeaveOneClipOutForAllSubject, pca7, arousal    , False, True, 0.194, 0.000, 0.037
-linear_regression, LeaveOneClipOutForAllSubject, pca2, likeability, False, True, 0.262, 0.000, 0.068
-ridge            , LeaveOneClipOutForAllSubject, pca2, likeability, False, True, 0.256, 0.000, 0.056
-linear_regression, LeaveOneClipOutForAllSubject, pca3, likeability, False, True, 0.296, 0.000, 0.087
-ridge            , LeaveOneClipOutForAllSubject, pca3, likeability, False, True, 0.290, 0.000, 0.071
-linear_regression, LeaveOneClipOutForAllSubject, pca4, likeability, False, True, 0.286, 0.000, 0.080
-ridge            , LeaveOneClipOutForAllSubject, pca4, likeability, False, True, 0.288, 0.000, 0.072
-linear_regression, LeaveOneClipOutForAllSubject, pca5, likeability, False, True, 0.282, 0.000, 0.076
-ridge            , LeaveOneClipOutForAllSubject, pca5, likeability, False, True, 0.281, 0.000, 0.070
-linear_regression, LeaveOneClipOutForAllSubject, pca6, likeability, False, True, 0.274, 0.000, 0.070
-ridge            , LeaveOneClipOutForAllSubject, pca6, likeability, False, True, 0.275, 0.000, 0.068
-linear_regression, LeaveOneClipOutForAllSubject, pca7, likeability, False, True, 0.290, 0.000, 0.078
-ridge            , LeaveOneClipOutForAllSubject, pca7, likeability, False, True, 0.295, 0.000, 0.078
-linear_regression, LeaveOneClipOutForAllSubject, pca2, rewatch    , False, True, 0.212, 0.000, 0.042
-ridge            , LeaveOneClipOutForAllSubject, pca2, rewatch    , False, True, 0.210, 0.000, 0.040
-linear_regression, LeaveOneClipOutForAllSubject, pca3, rewatch    , False, True, 0.249, 0.000, 0.059
-ridge            , LeaveOneClipOutForAllSubject, pca3, rewatch    , False, True, 0.248, 0.000, 0.055
-linear_regression, LeaveOneClipOutForAllSubject, pca4, rewatch    , False, True, 0.240, 0.000, 0.052
-ridge            , LeaveOneClipOutForAllSubject, pca4, rewatch    , False, True, 0.245, 0.000, 0.055
-linear_regression, LeaveOneClipOutForAllSubject, pca5, rewatch    , False, True, 0.222, 0.000, 0.040
-ridge            , LeaveOneClipOutForAllSubject, pca5, rewatch    , False, True, 0.229, 0.000, 0.049
-linear_regression, LeaveOneClipOutForAllSubject, pca6, rewatch    , False, True, 0.220, 0.000, 0.038
-ridge            , LeaveOneClipOutForAllSubject, pca6, rewatch    , False, True, 0.231, 0.000, 0.051
-linear_regression, LeaveOneClipOutForAllSubject, pca7, rewatch    , False, True, 0.251, 0.000, 0.054
-ridge            , LeaveOneClipOutForAllSubject, pca7, rewatch    , False, True, 0.258, 0.000, 0.062
+run_features=False 
+linear_regression, LeaveOneClipOutForEachSubject, pca2, valence    , False, True, 0.322, 0.000, 0.100
+ridge            , LeaveOneClipOutForEachSubject, pca2, valence    , False, True, 0.328, 0.000, 0.092
+linear_regression, LeaveOneClipOutForEachSubject, pca3, valence    , False, True, 0.328, 0.000, 0.102
+ridge            , LeaveOneClipOutForEachSubject, pca3, valence    , False, True, 0.333, 0.000, 0.096
+linear_regression, LeaveOneClipOutForEachSubject, pca4, valence    , False, True, 0.331, 0.000, 0.102
+ridge            , LeaveOneClipOutForEachSubject, pca4, valence    , False, True, 0.335, 0.000, 0.097
+linear_regression, LeaveOneClipOutForEachSubject, pca5, valence    , False, True, 0.335, 0.000, 0.103
+ridge            , LeaveOneClipOutForEachSubject, pca5, valence    , False, True, 0.338, 0.000, 0.100
+linear_regression, LeaveOneClipOutForEachSubject, pca6, valence    , False, True, 0.355, 0.000, 0.116
+ridge            , LeaveOneClipOutForEachSubject, pca6, valence    , False, True, 0.351, 0.000, 0.107
+linear_regression, LeaveOneClipOutForEachSubject, pca7, valence    , False, True, 0.352, 0.000, 0.112
+ridge            , LeaveOneClipOutForEachSubject, pca7, valence    , False, True, 0.347, 0.000, 0.106
+linear_regression, LeaveOneClipOutForEachSubject, pca2, arousal    , False, True, 0.146, 0.001, 0.001
+ridge            , LeaveOneClipOutForEachSubject, pca2, arousal    , False, True, 0.156, 0.001, 0.024
+linear_regression, LeaveOneClipOutForEachSubject, pca3, arousal    , False, True, 0.135, 0.003, -0.011
+ridge            , LeaveOneClipOutForEachSubject, pca3, arousal    , False, True, 0.149, 0.001, 0.022
+linear_regression, LeaveOneClipOutForEachSubject, pca4, arousal    , False, True, 0.107, 0.021, -0.032
+ridge            , LeaveOneClipOutForEachSubject, pca4, arousal    , False, True, 0.127, 0.006, 0.015
+linear_regression, LeaveOneClipOutForEachSubject, pca5, arousal    , False, True, 0.117, 0.011, -0.034
+ridge            , LeaveOneClipOutForEachSubject, pca5, arousal    , False, True, 0.129, 0.005, 0.015
+linear_regression, LeaveOneClipOutForEachSubject, pca6, arousal    , False, True, 0.082, 0.077, -0.072
+ridge            , LeaveOneClipOutForEachSubject, pca6, arousal    , False, True, 0.119, 0.010, 0.012
+linear_regression, LeaveOneClipOutForEachSubject, pca7, arousal    , False, True, 0.052, 0.263, -0.106
+ridge            , LeaveOneClipOutForEachSubject, pca7, arousal    , False, True, 0.096, 0.038, 0.002
+linear_regression, LeaveOneClipOutForEachSubject, pca2, likeability, False, True, 0.281, 0.000, 0.074
+ridge            , LeaveOneClipOutForEachSubject, pca2, likeability, False, True, 0.274, 0.000, 0.067
+linear_regression, LeaveOneClipOutForEachSubject, pca3, likeability, False, True, 0.302, 0.000, 0.083
+ridge            , LeaveOneClipOutForEachSubject, pca3, likeability, False, True, 0.296, 0.000, 0.078
+linear_regression, LeaveOneClipOutForEachSubject, pca4, likeability, False, True, 0.301, 0.000, 0.081
+ridge            , LeaveOneClipOutForEachSubject, pca4, likeability, False, True, 0.300, 0.000, 0.080
+linear_regression, LeaveOneClipOutForEachSubject, pca5, likeability, False, True, 0.299, 0.000, 0.076
+ridge            , LeaveOneClipOutForEachSubject, pca5, likeability, False, True, 0.295, 0.000, 0.079
+linear_regression, LeaveOneClipOutForEachSubject, pca6, likeability, False, True, 0.290, 0.000, 0.066
+ridge            , LeaveOneClipOutForEachSubject, pca6, likeability, False, True, 0.287, 0.000, 0.076
+linear_regression, LeaveOneClipOutForEachSubject, pca7, likeability, False, True, 0.309, 0.000, 0.077
+ridge            , LeaveOneClipOutForEachSubject, pca7, likeability, False, True, 0.300, 0.000, 0.082
+linear_regression, LeaveOneClipOutForEachSubject, pca2, rewatch    , False, True, 0.236, 0.000, 0.042
+ridge            , LeaveOneClipOutForEachSubject, pca2, rewatch    , False, True, 0.244, 0.000, 0.057
+linear_regression, LeaveOneClipOutForEachSubject, pca3, rewatch    , False, True, 0.228, 0.000, 0.030
+ridge            , LeaveOneClipOutForEachSubject, pca3, rewatch    , False, True, 0.235, 0.000, 0.054
+linear_regression, LeaveOneClipOutForEachSubject, pca4, rewatch    , False, True, 0.212, 0.000, 0.013
+ridge            , LeaveOneClipOutForEachSubject, pca4, rewatch    , False, True, 0.224, 0.000, 0.050
+linear_regression, LeaveOneClipOutForEachSubject, pca5, rewatch    , False, True, 0.181, 0.000, -0.018
+ridge            , LeaveOneClipOutForEachSubject, pca5, rewatch    , False, True, 0.200, 0.000, 0.040
+linear_regression, LeaveOneClipOutForEachSubject, pca6, rewatch    , False, True, 0.182, 0.000, -0.021
+ridge            , LeaveOneClipOutForEachSubject, pca6, rewatch    , False, True, 0.200, 0.000, 0.040
+linear_regression, LeaveOneClipOutForEachSubject, pca7, rewatch    , False, True, 0.202, 0.000, -0.012
+ridge            , LeaveOneClipOutForEachSubject, pca7, rewatch    , False, True, 0.215, 0.000, 0.046

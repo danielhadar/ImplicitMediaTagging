@@ -344,26 +344,30 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
 
             to_drop = to_drop_list
             if obj_or_subj == 'subj':
-                y_df = y_df.xs(subj)
+                cur_y_df = y_df.loc[[subj]]
 
             if scale_x:     # scaling WITHIN subject. could be changed to scaled over all subejcts
+                # print(df_moments.head(1))
+                # print(df_moments.xs(subj).head(1))
+                # print(df_moments.loc[[subj]].head(1))
+                # quit()
                 X_moments, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_moments.xs(subj).drop(to_drop).apply(scale), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_moments.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_quantized, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_quantized.xs(subj).drop(to_drop).apply(scale), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_quantized.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_dynamic.xs(subj).drop(to_drop).apply(scale), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_dynamic.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_misc, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_misc.xs(subj).drop(to_drop).apply(scale), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_misc.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
             else:
                 X_moments, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_moments.xs(subj).drop(to_drop), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_moments.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_quantized, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_quantized.xs(subj).drop(to_drop), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_quantized.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_dynamic.xs(subj).drop(to_drop), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_dynamic.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_misc, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_misc.xs(subj).drop(to_drop), y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_misc.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
 
             x_arr = []
             for X in [X_moments, X_quantized, X_dynamic]:

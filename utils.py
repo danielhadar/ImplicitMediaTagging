@@ -64,7 +64,7 @@ BLINKS_BS = ['EyeBlink_L', 'EyeBlink_R']
 def flatten_list(l):
     if np.ndim(l) == 1:
         return l
-    return [item for sublist in l for item in sublist]
+    return [float(item) for sublist in l for item in sublist]
 
 
 def slice_features_df_for_specific_blendshapes(df, blendshapes_list):

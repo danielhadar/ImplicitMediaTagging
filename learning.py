@@ -77,7 +77,8 @@ def feature_selection(X, fs_model_name, n_components=3):
 # --------------------------
 
 def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=False,
-        f=None, use_single_predicted_Y_foreach_clip=False, is_second_learner=False):
+        f=None, use_single_predicted_Y_foreach_clip=False, is_second_learner=False,
+        corr_method='normal'):
     # this function learns X&Y using learning_model and evaluates it using cv_model
 
     if is_scaled:
@@ -92,12 +93,6 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
         clf = run_learning(X, Y, learning_model_name)
         Y_predicted_arr.append(clf.predict(X))       # add predicted y to predicted array
         Y_test_arr.append(Y)                         # add actual    y to actual    array
-
-        # print clips to excel:
-        # c = []
-        # for i in range(18):
-        #     c.append("%.3f" % np.abs(flatten_list(Y_predicted_arr)[i]-flatten_list(Y_test_arr)[i]))
-        # f.write( str(c) + '\n' )
 
     else:
         cv_model_idx_list = split_data(len(Y), cv_model_name)
@@ -123,7 +118,7 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
                 chunks_iter = grouper(first_learner_predicted_Y, seg_size)    # iterator of chunks of seg_size
                 for clip in chunks_iter:
                     second_learner_X.append(
-                        (np.mean(clip), np.var(clip)))                        # create X for 2nd learner
+                        (np.median(clip), np.var(clip)))                        # create X for 2nd learner
 
                 clf2 = run_learning(second_learner_X, Y_train[0::seg_size],
                                     learning_model_name, is_normalized)        # run 2nd learner
@@ -143,13 +138,17 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
                     for clip in chunks_iter:
                         Y_predicted_arr.append(np.median(clip))
                     Y_test_arr.extend(Y_test[0::seg_size])
-
+                    print(SUBJECTS_IDS[int(test_idx[0]/54)])
+                    print(flatten_list(Y_test_arr))
+                    print(flatten_list(Y_predicted_arr))
 
                 else:
                     Y_predicted_arr.append(Y_predicted)     # add predicted y to predicted array
                     Y_test_arr.append(Y_test)               # add actual    y to actual    array
 
-    return calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr))
+    return_val = calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr), method=corr_method)
+    return return_val
+    # return calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr), method=corr_method)
 
 
 def create_learning_data_features_and_objective_for_all_subjects(features_df, objective_df):
@@ -323,8 +322,11 @@ def run_learning(X_train, Y_train, learning_model, is_normalized=False, args=[])
 # ---     Evaluate       ---
 # --------------------------
 
-def calculate_corr(actual_y, predicted_y):
-    return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
+def calculate_corr(actual_y, predicted_y, method):
+    if method == 'acc':
+        return 0, (accuracy_score(actual_y, predicted_y), 0), (0, 0)    # returned as prearson's value
+    else:
+        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
 
 
 # --------------------------
@@ -334,7 +336,7 @@ def calculate_corr(actual_y, predicted_y):
 def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, obj_or_subj,
                            scale_x, model_for_each_subject, to_drop_list,
                            fs_model_name, fs_n_components, axis, learning_model_name, cv_model_name, is_second_learner,
-                           f=None, use_single_predicted_Y_foreach_clip=False):
+                           f=None, use_single_predicted_Y_foreach_clip=False, corr_method='normal'):
 
     if model_for_each_subject:
 
@@ -342,32 +344,30 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
 
         for subj in SUBJECTS_IDS:
 
-            to_drop = to_drop_list
+            clips_drop = to_drop_list
             if obj_or_subj == 'subj':
                 cur_y_df = y_df.loc[[subj]]
+            else:
+                cur_y_df = y_df
 
             if scale_x:     # scaling WITHIN subject. could be changed to scaled over all subejcts
-                # print(df_moments.head(1))
-                # print(df_moments.xs(subj).head(1))
-                # print(df_moments.loc[[subj]].head(1))
-                # quit()
                 X_moments, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_moments.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_moments.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_quantized, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_quantized.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_quantized.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_dynamic.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_dynamic.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_misc, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_misc.loc[[subj]].drop(to_drop).apply(scale), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_misc.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
             else:
                 X_moments, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_moments.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_moments.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_quantized, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_quantized.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_quantized.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_dynamic.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_dynamic.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
                 X_misc, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_misc.loc[[subj]].drop(to_drop), cur_y_df.drop(to_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+                    (df_misc.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
 
             x_arr = []
             for X in [X_moments, X_quantized, X_dynamic]:
@@ -394,19 +394,22 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                 = run(feat, Y, learning_model_name, cv_model_name,
                       is_scaled=True, is_normalized=True, f=f,
                       use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
-                      is_second_learner=is_second_learner)
+                      is_second_learner=is_second_learner, corr_method=corr_method)
 
             subjects_corr.append((pearsonr_val, pearsonr_p_val, subj, r2))
 
         return subjects_corr
 
     else:
-        X_misc, Y = create_learning_data_features_and_objective_for_single_subject(df_misc, y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_moments, Y = create_learning_data_features_and_objective_for_single_subject(df_moments, y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_quantized, Y = create_learning_data_features_and_objective_for_single_subject(df_quantized, y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject(df_dynamic, y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
+        subj_drop = []
+        if subj_drop:
+            SUBJECTS_IDS[:-len(subj_drop)]
+        X_misc, Y = create_learning_data_features_and_objective_for_single_subject(df_misc.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
+        X_moments, Y = create_learning_data_features_and_objective_for_single_subject(df_moments.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
+        X_quantized, Y = create_learning_data_features_and_objective_for_single_subject(df_quantized.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
+        X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject(df_dynamic.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
 
-        # feature selection over each type of feature separately
+        # (a) feature selection over each type of feature separately
         x_arr = []
         for X in [X_moments, X_quantized, X_dynamic]:
             if np.shape(X)[1] > fs_n_components:
@@ -415,16 +418,17 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                 tmp_x = feature_selection(X, fs_model_name, n_components=np.shape(X)[1])
             x_arr.append(tmp_x)
         x_arr.append(X_misc)
-
         feat = np.concatenate(x_arr, axis=1)    # <<<
 
-        # feature selection over all features
+        # (b) feature selection over all features
+        # feat = np.concatenate([X_misc, X_moments, X_quantized, X_dynamic], axis=1)
         # feat = feature_selection(feat, fs_model_name, n_components=fs_n_components)
+
         r2, (pearsonr_val, pearsonr_p_val), (spearman_val, spearman_p_val) \
             = run(feat, Y, learning_model_name, cv_model_name,
                   is_scaled=True, is_normalized=True, f=f,
                   use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
-                  is_second_learner=is_second_learner)
+                  is_second_learner=is_second_learner, corr_method=corr_method)
 
         return [[pearsonr_val, pearsonr_p_val, '', r2]]
 

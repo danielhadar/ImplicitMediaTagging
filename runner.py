@@ -18,9 +18,9 @@ LEARNING_MODELS = ['linear_regression', 'ridge            ']
 # CV_MODELS = ['none']
 # CV_MODELS = ['loo']
 # CV_MODELS = ['LeaveOneClipOutForEachSubject', 'LeaveOneClipOutForAllSubject', 'LeaveOneSubjOut']
-CV_MODELS = ['LeaveOneClipOutForEachSubject']
+# CV_MODELS = ['LeaveOneClipOutForEachSubject']
 # CV_MODELS = ['LeaveOneClipOutForAllSubject']
-# CV_MODELS = ['LeaveOneSubjOut']
+CV_MODELS = ['LeaveOneSubjOut']
 
 
 RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewatch    ',3)]
@@ -28,8 +28,8 @@ RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewat
 # RATINGS_AXES = [('rewatch',3)]
 
 # FS_MODELS = ['none', 'pca']
-FS_MODELS = ['pca']
-# FS_MODELS = ['none']
+# FS_MODELS = ['pca']
+FS_MODELS = ['none']
 
 def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                 set_win_size, hl_margins, is_smart_hl, run_segmentize, is_hl, segments_length,
@@ -80,11 +80,14 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
     if run_learning:
         all_features_df, df_moments, df_quantized, df_dynamic, df_misc, objective_df, ratings_df, big5_df, raw_df, majority_objective_df = \
             learning_load_all_dfs(use_hl=is_hl_in_learning, use_both_for_obj=is_both_for_obj)
+
         y_df = objective_df if obj_or_subj == 'obj' else ratings_df
+        corr_method = 'normal'  # r2, pearson, spearman
         if is_majority_vote:
             y_df = majority_objective_df
             ratings_axes_list = [('likeability',2), ('rewatch    ',3)]
             learning_models_list = ['SVC']
+            corr_method = 'acc'
 
         elif scale_y:
             y_df = y_df.apply(scale)
@@ -102,7 +105,8 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                                                                    fs_n_components=fs_n_components, axis=axis,
                                                                    learning_model_name=learning_model_name, cv_model_name=cv_model_name,
                                                                    is_second_learner=is_second_learner,
-                                                                   f=f, use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip)
+                                                                   f=f, use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
+                                                                   corr_method=corr_method)
 
                             f.write(learning_model_name + ', ' + cv_model_name + ', '
                                     + fs_model_name + str(fs_n_components) + ', ' + axis[0] + ', ' +
@@ -111,7 +115,7 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                                     str('%.3f' % np.mean([i[1] for i in subjects_corr])) + ', ' +
                                     str('%.3f' % np.mean([i[3] for i in subjects_corr])) + '\n')
 
-                            toc = time()
+                            # toc = time()
                             print("%s, %s%.2i, %s, %s: %.3f, (p=%.3f), r^2=%.3f" %
                                   (learning_model_name, fs_model_name, fs_n_components, cv_model_name, axis[0],
                                    np.mean([i[0] for i in subjects_corr]), np.mean([i[1] for i in subjects_corr]),
@@ -151,8 +155,11 @@ if __name__ == '__main__':
                 run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
                 is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS,
 
-                run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
+                run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=False, scale_x=True, use_single_predicted_Y_foreach_clip=True,
-                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(2,8),
+
+                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(6,7),
                 learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-                is_second_learner=True, is_majority_vote=False)                                     # to use is_majority_vote set obj_or_subj='obj'
+                is_second_learner=False,
+
+                is_majority_vote=True)                                     # to use is_majority_vote set obj_or_subj='obj'

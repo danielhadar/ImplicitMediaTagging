@@ -4,6 +4,7 @@ import sys
 from scipy.stats import pearsonr
 from sklearn.metrics import r2_score
 from scipy.stats import spearmanr
+from sklearn.metrics import accuracy_score
 
 def warn(*args, **kwargs):
     pass
@@ -237,9 +238,13 @@ def find_peaks(v, delta=0.1, x = None):
 def count_peaks(v, delta=0.1, x = None):
     return len(find_peaks(v, delta, x))
 
-def get_majoity(list):
+def get_majoity(list, bin=False, th=2):
     # returns the majority vote.
-    return max(set(list), key=list.count)
+    # bin=True yields a binary list (2-class: 0/1) - i.e. thresholding
+    if bin:
+        return 1 if np.mean(list) > th else 0
+    else:
+        return max(set(list), key=list.count)
 
 def get_pos_or_neg(list):
     # returns a quantized yes/no (for rewatch, likeability) - 0 or 1

@@ -522,7 +522,7 @@ if __name__ == '__main__':
     #     df = get_resting_state_vid_to_df(subj_id, t0s[0])   # subj_id and rest_T0
     #     export_df_to_pickle(df, PICKLES_FOLDER + '/rest/' + str(subj_id) + '_rest.pickle')
     #
-        # raw
+    # raw
     # create_raw(is_hl=True)
 
     #   > Majority Vote subjects ratings
@@ -531,8 +531,8 @@ if __name__ == '__main__':
     majority_objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
     majority_objective_df.drop(majority_objective_df.columns[[0,1,4,5,6,7,8,9]], axis=1, inplace=True)
     for idx, data in df.groupby(level=1):
-        majority_objective_df.loc[idx, 'rewatch'] = get_majoity(data.rewatch.tolist())
-        majority_objective_df.loc[idx, 'likeability'] = get_majoity(data.likeability.tolist())
+        majority_objective_df.loc[idx, 'rewatch'] = get_majoity(data.rewatch.tolist(), bin=True, th=df.rewatch.mean())
+        majority_objective_df.loc[idx, 'likeability'] = get_majoity(data.likeability.tolist(), bin=True, th=df.likeability.mean())
     export_df_to_pickle(majority_objective_df, PICKLES_FOLDER + '/majority_objective.pickle')
 
     # --- RUN ONLY ONCE: end ---

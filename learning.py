@@ -1,6 +1,6 @@
 from features import *
 from utils import *
-
+import dictionaries
 
 
 # --------------------------
@@ -81,6 +81,8 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
         corr_method='normal'):
     # this function learns X&Y using learning_model and evaluates it using cv_model
 
+    all_corr_grades = []
+
     if is_scaled:
         from sklearn import preprocessing
         X = preprocessing.scale(X)
@@ -91,12 +93,13 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
     # train-set and test-set are identical (and equal to the entire set)
     if cv_model_name == 'none':
         clf = run_learning(X, Y, learning_model_name)
-        Y_predicted_arr.append(clf.predict(X))       # add predicted y to predicted array
-        Y_test_arr.append(Y)                         # add actual    y to actual    array
+        return calculate_corr(flatten_list(Y), flatten_list(clf.predict(X)), method=corr_method)
 
     else:
         cv_model_idx_list = split_data(len(Y), cv_model_name)
         for train_idx, test_idx in cv_model_idx_list:
+            # Y_predicted_arr = []
+            # Y_test_arr = []
 
             # split data
             X_train, X_test = X[train_idx], X[test_idx]
@@ -107,10 +110,9 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
             Y_predicted = clf.predict(X_test)
 
             # calculate segment size
-            seg_size = int(len(X)/(NUM_CLIPS*len(SUBJECTS_IDS)))
+            seg_size = int(len(X)/(NUM_CLIPS*len(dictionaries.SUBJECTS_IDS)))
             if seg_size < 1:    # when computing a model for each subj, len(x) is as long as one subject's data
                 seg_size = int(len(X)/NUM_CLIPS)
-
 
             if is_second_learner:
                 second_learner_X = []
@@ -128,8 +130,9 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
                 chunks_iter = grouper(Y_predicted, seg_size)                  # iterator of chunks of seg_size
                 for clip in chunks_iter:                                      # learn each clip
                     Y_predicted_arr.append(clf2.predict((np.mean(clip), np.var(clip))))
-
                 Y_test_arr.extend(Y_test[0::seg_size])
+
+                # print(SUBJECTS_IDS[int(test_idx[0]/54)])
 
             else:
                 # compute a single grade for each clip (a clip is the size of seg_size)
@@ -138,17 +141,23 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
                     for clip in chunks_iter:
                         Y_predicted_arr.append(np.median(clip))
                     Y_test_arr.extend(Y_test[0::seg_size])
-                    print(SUBJECTS_IDS[int(test_idx[0]/54)])
-                    print(flatten_list(Y_test_arr))
-                    print(flatten_list(Y_predicted_arr))
-
                 else:
                     Y_predicted_arr.append(Y_predicted)     # add predicted y to predicted array
                     Y_test_arr.append(Y_test)               # add actual    y to actual    array
 
-    return_val = calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr), method=corr_method)
-    return return_val
-    # return calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr), method=corr_method)
+            # all_corr_grades.append(calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr), method=corr_method))
+
+    # return (np.mean([i[0] for i in all_corr_grades]),
+    # (np.mean([i[1][0] for i in all_corr_grades]), np.mean([i[1][1] for i in all_corr_grades])),
+    # (np.mean([i[2][0] for i in all_corr_grades]), np.mean([i[2][1] for i in all_corr_grades])))
+
+    # for clip in grouper(Y_predicted_arr, 18):
+    #     print(flatten_list(clip))
+    # print(flatten_list(Y_test_arr))
+    # print(flatten_list(Y_predicted_arr))
+    # quit()
+
+    return calculate_corr(flatten_list(Y_test_arr), flatten_list(Y_predicted_arr), method=corr_method)
 
 
 def create_learning_data_features_and_objective_for_all_subjects(features_df, objective_df):
@@ -159,7 +168,7 @@ def create_learning_data_features_and_objective_for_all_subjects(features_df, ob
     modified_df = features_df.copy()    # add the objective rating for each row (for each FE)
 
     # attach 4 new columns to the features_df: v, a, l, r (objective)
-    for s in SUBJECTS_IDS:
+    for s in dictionaries.SUBJECTS_IDS:
         for idx, row in objective_df.iterrows():
             modified_df.set_value((s, idx), 'valence_obj', row.valence)
             modified_df.set_value((s, idx), 'arousal_obj', row.arousal)
@@ -252,9 +261,9 @@ def split_data(size, cv_model_name):
     if cv_model_name == 'LeaveOneClipOutForAllSubject':
         cv_model = []
         full_arr = np.array([i for i in range(size)])
-        full_test = np.array_split(full_arr, NUM_CLIPS*len(SUBJECTS_IDS))
+        full_test = np.array_split(full_arr, NUM_CLIPS*len(dictionaries.SUBJECTS_IDS))
 
-        for clip in range(NUM_CLIPS*len(SUBJECTS_IDS)):
+        for clip in range(NUM_CLIPS*len(dictionaries.SUBJECTS_IDS)):
             test = full_test[clip]
             train = np.setdiff1d(full_arr, test)
             cv_model.append((train, test))
@@ -264,9 +273,9 @@ def split_data(size, cv_model_name):
     if cv_model_name == 'LeaveOneSubjOut':
         cv_model = []
         full_arr = np.array([i for i in range(size)])
-        full_test = np.array_split(full_arr, len(SUBJECTS_IDS))
+        full_test = np.array_split(full_arr, len(dictionaries.SUBJECTS_IDS))
 
-        for subj in range(len(SUBJECTS_IDS)):
+        for subj in range(len(dictionaries.SUBJECTS_IDS)):
             test = full_test[subj]
             train = np.setdiff1d(full_arr, test)
             cv_model.append((train, test))
@@ -323,10 +332,14 @@ def run_learning(X_train, Y_train, learning_model, is_normalized=False, args=[])
 # --------------------------
 
 def calculate_corr(actual_y, predicted_y, method):
+
     if method == 'acc':
         return 0, (accuracy_score(actual_y, predicted_y), 0), (0, 0)    # returned as prearson's value
     else:
-        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
+        if np.var(actual_y) == 0:
+            return r2_score(actual_y, predicted_y), (0, pearsonr(actual_y, predicted_y)[1]), (se_of_regression(predicted_y, actual_y), 0) # 5 numbers
+        # return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
+        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), (se_of_regression(predicted_y, actual_y), 0) # 5 numbers
 
 
 # --------------------------
@@ -342,7 +355,7 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
 
         subjects_corr = []
 
-        for subj in SUBJECTS_IDS:
+        for subj in dictionaries.SUBJECTS_IDS:
 
             clips_drop = to_drop_list
             if obj_or_subj == 'subj':
@@ -396,18 +409,18 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                       use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
                       is_second_learner=is_second_learner, corr_method=corr_method)
 
-            subjects_corr.append((pearsonr_val, pearsonr_p_val, subj, r2))
+            subjects_corr.append((pearsonr_val, pearsonr_p_val, subj, r2, spearman_val))
 
         return subjects_corr
 
     else:
         subj_drop = []
         if subj_drop:
-            SUBJECTS_IDS[:-len(subj_drop)]
-        X_misc, Y = create_learning_data_features_and_objective_for_single_subject(df_misc.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_moments, Y = create_learning_data_features_and_objective_for_single_subject(df_moments.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_quantized, Y = create_learning_data_features_and_objective_for_single_subject(df_quantized.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject(df_dynamic.drop(subj_drop), y_df, axis[0].strip(), obj_or_subj=obj_or_subj)
+            dictionaries.SUBJECTS_IDS = [i for i in dictionaries.SUBJECTS_IDS if i not in subj_drop]
+        X_misc, Y = create_learning_data_features_and_objective_for_single_subject(df_misc.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+        X_moments, Y = create_learning_data_features_and_objective_for_single_subject(df_moments.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+        X_quantized, Y = create_learning_data_features_and_objective_for_single_subject(df_quantized.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+        X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject(df_dynamic.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
 
         # (a) feature selection over each type of feature separately
         x_arr = []
@@ -430,7 +443,7 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                   use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
                   is_second_learner=is_second_learner, corr_method=corr_method)
 
-        return [[pearsonr_val, pearsonr_p_val, '', r2]]
+        return [[pearsonr_val, pearsonr_p_val, '', r2, spearman_val]]
 
         # print(learning_model_name + ', ' + cv_model_name
         #       + ', ' + fs_model_name + str(fs_n_components)  + ', ' + axis[0]

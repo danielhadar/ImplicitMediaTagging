@@ -18,9 +18,9 @@ LEARNING_MODELS = ['linear_regression', 'ridge            ']
 # CV_MODELS = ['none']
 # CV_MODELS = ['loo']
 # CV_MODELS = ['LeaveOneClipOutForEachSubject', 'LeaveOneClipOutForAllSubject', 'LeaveOneSubjOut']
-# CV_MODELS = ['LeaveOneClipOutForEachSubject']
+CV_MODELS = ['LeaveOneClipOutForEachSubject']
 # CV_MODELS = ['LeaveOneClipOutForAllSubject']
-CV_MODELS = ['LeaveOneSubjOut']
+# CV_MODELS = ['LeaveOneSubjOut']
 
 
 RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewatch    ',3)]
@@ -28,8 +28,8 @@ RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewat
 # RATINGS_AXES = [('rewatch',3)]
 
 # FS_MODELS = ['none', 'pca']
-# FS_MODELS = ['pca']
-FS_MODELS = ['none']
+FS_MODELS = ['pca']
+# FS_MODELS = ['none']
 
 def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                 set_win_size, hl_margins, is_smart_hl, run_segmentize, is_hl, segments_length,
@@ -120,6 +120,7 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                                   (learning_model_name, fs_model_name, fs_n_components, cv_model_name, axis[0],
                                    np.mean([i[0] for i in subjects_corr]), np.mean([i[1] for i in subjects_corr]),
                                    np.mean([i[3] for i in subjects_corr])))
+                                   # np.mean([i[4] for i in subjects_corr])))
                             # print(" In a total time of: %.2f" % (toc-tic))
 
 
@@ -155,11 +156,11 @@ if __name__ == '__main__':
                 run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
                 is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS,
 
-                run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
+                run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=False, scale_x=True, use_single_predicted_Y_foreach_clip=True,
 
                 is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(6,7),
                 learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
                 is_second_learner=False,
 
-                is_majority_vote=True)                                     # to use is_majority_vote set obj_or_subj='obj'
+                is_majority_vote=False)                                     # to use is_majority_vote set obj_or_subj='obj'

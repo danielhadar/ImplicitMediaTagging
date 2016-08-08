@@ -1,6 +1,13 @@
-Start Time: 16:24:44
+Start Time: 21:21:55
 run_preprocessing=False 
 set_win_size=False 
 run_segmentize=False 
 run_features=False 
-SVC, LeaveOneSubjOut, none6, likeability, False, True, 0.600, 0.000, 0.000
+linear_regression, LeaveOneClipOutForEachSubject, pca6, valence    , False, True, 0.323, 0.000, 0.098
+ridge            , LeaveOneClipOutForEachSubject, pca6, valence    , False, True, 0.315, 0.000, 0.087
+linear_regression, LeaveOneClipOutForEachSubject, pca6, arousal    , False, True, 0.077, 0.097, -0.055
+ridge            , LeaveOneClipOutForEachSubject, pca6, arousal    , False, True, 0.118, 0.011, 0.011
+linear_regression, LeaveOneClipOutForEachSubject, pca6, likeability, False, True, 0.261, 0.000, 0.056
+ridge            , LeaveOneClipOutForEachSubject, pca6, likeability, False, True, 0.259, 0.000, 0.063
+linear_regression, LeaveOneClipOutForEachSubject, pca6, rewatch    , False, True, 0.137, 0.003, -0.030
+ridge            , LeaveOneClipOutForEachSubject, pca6, rewatch    , False, True, 0.146, 0.002, 0.019

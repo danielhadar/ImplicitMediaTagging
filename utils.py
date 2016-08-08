@@ -5,6 +5,9 @@ from scipy.stats import pearsonr
 from sklearn.metrics import r2_score
 from scipy.stats import spearmanr
 from sklearn.metrics import accuracy_score
+from math import isnan
+
+global SUBJECTS_IDS
 
 def warn(*args, **kwargs):
     pass
@@ -36,11 +39,6 @@ GOOD_BLENDSHAPES = ['EyeBlink_L', 'EyeBlink_R','EyeIn_L', 'EyeIn_R', 'BrowsU_C',
 
 MY_BS = ['EyeBlink_L', 'EyeBlink_R', 'MouthSmile_L', 'MouthSmile_R', 'MouthDimple_L', 'MouthDimple_R', 'LipsStretch_L',
                'LipsStretch_R', 'Sneer_L', 'Sneer_R']
-
-SUBJECTS_IDS = ['311461917', '304835366', '304854938', '315688713', '204058010', '203237607', '204033971', '203025663',
-                '203931639', '308286285', '315823492', '203667092', '312282494', '304957913', '200398733', '332521830',
-                '336079314', '317857084', '311357735', '204713721', '337835383', '203712351', '305584989', '308476639',
-                '301840336', '321720443']    # len = 26
 
 SUBJECTS_DICT = {315823492: [6, 10], 315688713: [4, 10], 337835383: [8, 11], 200398733: [6, 15],
                  308286285: [6, 9], 301840336: [4, 14], 336079314: [4, 11], 203667092: [11, 11],
@@ -255,3 +253,11 @@ def get_pos_or_neg(list):
         else:
             return_list.append(0.0)
     return return_list
+
+def se_of_regression(predicted, actual):
+    # Standard error of the regression
+    # https://www.otexts.org/fpp/4/4
+    N = len(predicted)
+    return np.sqrt(
+        (1/(N-2)) * sum([pow((a-b),2) for a,b in zip(predicted, actual)])
+    )

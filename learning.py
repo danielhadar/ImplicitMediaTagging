@@ -120,7 +120,7 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
                 chunks_iter = grouper(first_learner_predicted_Y, seg_size)    # iterator of chunks of seg_size
                 for clip in chunks_iter:
                     second_learner_X.append(
-                        (np.median(clip), np.var(clip)))                        # create X for 2nd learner
+                        (np.var(clip), np.mean(clip)))                        # create X for 2nd learner
 
                 clf2 = run_learning(second_learner_X, Y_train[0::seg_size],
                                     learning_model_name, is_normalized)        # run 2nd learner
@@ -129,7 +129,7 @@ def run(X, Y, learning_model_name, cv_model_name, is_scaled=True, is_normalized=
 
                 chunks_iter = grouper(Y_predicted, seg_size)                  # iterator of chunks of seg_size
                 for clip in chunks_iter:                                      # learn each clip
-                    Y_predicted_arr.append(clf2.predict((np.mean(clip), np.var(clip))))
+                    Y_predicted_arr.append(clf2.predict((np.var(clip), np.mean(clip))))
                 Y_test_arr.extend(Y_test[0::seg_size])
 
                 # print(SUBJECTS_IDS[int(test_idx[0]/54)])
@@ -245,7 +245,7 @@ def split_data(size, cv_model_name):
         cv_model = LeavePOut(size, 2)
 
     # The folowwing 3 cross validation models
-    # when learning a model *for each subj* leave a clip out (all it's sub-segments)
+    # when learning a model *for each subj* leave a clip out (all it's sub-segments), 18
     if cv_model_name == 'LeaveOneClipOutForEachSubject':
         # This one also works for MODEL FOR EACH SUBJ (leaving a whole clip out)
         cv_model = []
@@ -257,7 +257,7 @@ def split_data(size, cv_model_name):
             train = np.setdiff1d(full_arr, test)
             cv_model.append((train, test))
 
-    # EASIEST: when learning a model *over all subj* leave a clip out (all it's sub-segments)
+    # EASIEST: when learning a model *over all subj* leave a clip out (all it's sub-segments), 468
     if cv_model_name == 'LeaveOneClipOutForAllSubject':
         cv_model = []
         full_arr = np.array([i for i in range(size)])
@@ -268,7 +268,7 @@ def split_data(size, cv_model_name):
             train = np.setdiff1d(full_arr, test)
             cv_model.append((train, test))
 
-    # when learning a model *over all subj* leave one subj out
+    # when learning a model *over all subj* leave one subj out, 26
     # assuming number of clips is 18
     if cv_model_name == 'LeaveOneSubjOut':
         cv_model = []

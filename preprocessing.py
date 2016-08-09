@@ -343,13 +343,6 @@ def get_smart_hl_pivot_ind(data, hl_margins):
     # data is the 'watch' part of a single subject's single clip
     hl_win_size = sum(hl_margins)
 
-    # blink frequency
-    # smile left (36)
-    # smile right (37)
-    # mouth dimple left (38)
-    # mouth dimple right (39)
-    # lips strech left (40)
-    # lips strech right (41)
     # mouth frown left (42)
     # mouth frown right (43)
     # data.to_csv('d.csv')
@@ -361,11 +354,13 @@ def get_smart_hl_pivot_ind(data, hl_margins):
     l = [0] * (clip_len - hl_win_size + 1)                                   # amount of possible hl windows
 
     # df of windows properties
-    windows_df = pd.DataFrame({'blinks': l, 'smile': l, 'mouth_dimple': l,
+    windows_df = pd.DataFrame({'blinks': l, 'smile': l, 'mouth_dimple': l, 'lips_strech': l, 'mouth_frown': l,
+                               'smile_var': l, 'mouth_dimple_var': l, 'lips_strech_var': l, 'mouth_frown_var': l,
                                '_begin_frame':[i*fps for i in range(len(l))],
                                '_end_frame':[(i+hl_win_size)*fps for i in range(len(l))]})
-    windows_df[['mouth_dimple','smile']] = windows_df[['mouth_dimple','smile']].astype(float)
-
+    windows_df[['mouth_dimple','smile','smile_var','mouth_dimple_var']] = \
+        windows_df[['mouth_dimple','smile','smile_var','mouth_dimple_var']].astype(float)
+    # MouthFrown_L
     # create a list of times of blinks (in frames-times)
     blink_times_L = [i[0] for i in find_peaks(data['EyeBlink_L'], delta=data['EyeBlink_L'].mean()/2)]
     blink_times_R = [i[0] for i in find_peaks(data['EyeBlink_R'], delta=data['EyeBlink_R'].mean()/2)]
@@ -379,15 +374,34 @@ def get_smart_hl_pivot_ind(data, hl_margins):
         windows_df.set_value(idx, 'smile',
                              np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:,'MouthSmile_L'].mean(),
                                       data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:,'MouthSmile_R'].mean())))
+        windows_df.set_value(idx, 'lips_strech',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'LipsStretch_L'].mean(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'LipsStretch_R'].mean())))
+        windows_df.set_value(idx, 'mouth_frown',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthFrown_L'].mean(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthFrown_R'].mean())))
+        windows_df.set_value(idx, 'mouth_dimple_var',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthDimple_L'].var(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthDimple_R'].var())))
+        windows_df.set_value(idx, 'smile_var',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthSmile_L'].var(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthSmile_R'].var())))
+        windows_df.set_value(idx, 'lips_strech_var',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'LipsStretch_L'].var(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'LipsStretch_R'].var())))
+        windows_df.set_value(idx, 'mouth_frown_var',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthFrown_L'].var(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:, 'MouthFrown_R'].var())))
 
 
-    windows_df.ix[:,'mouth_dimple':] = windows_df.ix[:,'mouth_dimple':].apply(scale)
+
+    # windows_df.ix[:,'mouth_dimple':] = windows_df.ix[:,'mouth_dimple':].apply(scale)
+    windows_df.ix[:,'blinks':] = windows_df.ix[:,'blinks':].apply(scale)
     windows_df['summ'] = windows_df.iloc[:,2:].sum(axis=1)
 
     return int(windows_df.loc[[windows_df.summ.idxmax()]]._begin_frame \
            + fps*hl_margins[0] + int(data.ind.head(1)))             # best frame + seconds from beginning + start idx
 
-    # return idx + hl_margins[0]
 
     # jaw open? (25)
     # lips together (26)
@@ -398,17 +412,6 @@ def get_smart_hl_pivot_ind(data, hl_margins):
     # lip upper up right (31)
     # lip upper close (34)
     # lip lower close (35)
-
-
-
-
-    # for (t, bt, sm, sv) in a:
-    #     print("%i, %i, %.2f, %.2f" % (t, bt, sm, sv))
-    # for i in range(len(a)):
-    #     print("%i, %.2f, %.2f, %.2f" % (a[i][0], bts[i], sms[i], svs[i]))
-
-
-
 
 
 def set_window_size(hl_margins, is_smart_hl):

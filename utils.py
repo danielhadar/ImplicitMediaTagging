@@ -2,8 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 from scipy.stats import pearsonr
-from sklearn.metrics import r2_score
 from scipy.stats import spearmanr
+from scipy.stats import skew
+from scipy.stats import kurtosis
+from sklearn.metrics import r2_score
 from sklearn.metrics import accuracy_score
 from math import isnan
 

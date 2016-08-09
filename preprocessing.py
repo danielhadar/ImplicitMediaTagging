@@ -309,24 +309,24 @@ def create_raw(is_hl):
         if is_hl:
             df = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df, use_hl=True,
                                                      to_segmentize=False, seg_length_in_frames=None,
-                                                     hl_margins=None)                                               # hl
-            export_df_to_pickle(df, PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw.pickle')                 # hl
+                                                     hl_margins=None)
+            export_df_to_pickle(df, PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw.pickle')
 
             # commented out, but could be used to compute moments over unsegmentized raw
             # df_unsegmentized = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df, use_hl=True,
             #                                          to_segmentize=False, seg_length_in_frames=seg_len,
-            #                                          hl_margins=hl_margins)                                                         # hl
-            # export_df_to_pickle(df_unsegmentized, PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')    # hl
+            #                                          hl_margins=hl_margins)
+            # export_df_to_pickle(df_unsegmentized, PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')
         else:
             df = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df,
                                                          to_segmentize=False, seg_length_in_frames=None,
-                                                         hl_margins=None)                                      # not hl
-            export_df_to_pickle(df, PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw.pickle')                         # not hl
+                                                         hl_margins=None)
+            export_df_to_pickle(df, PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw.pickle')
 
             # df_unsegmentized = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df,
             #                                              to_segmentize=False, seg_length_in_frames=seg_len,
-            #                                              hl_margins=hl_margins)                                                     # not hl
-            # export_df_to_pickle(df_unsegmentized, PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')            # not hl
+            #                                              hl_margins=hl_margins)
+            # export_df_to_pickle(df_unsegmentized, PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')
 
     # > Stitch all raw DFs
     print(" ... Stiching all raw DFs ...")
@@ -338,28 +338,68 @@ def create_raw(is_hl):
         export_df_to_pickle(df, PICKLES_FOLDER + '/org_raw.pickle')
 
 
-def get_smart_hl_pivot_ind(data, hl_win_size):
+def get_smart_hl_pivot_ind(data, hl_margins):
     # return the index (in terms of ind) with the most interesting environment
     # data is the 'watch' part of a single subject's single clip
+    hl_win_size = sum(hl_margins)
 
-    # blink_times = [i[0] for i in find_peaks(data['EyeBlink_L'], delta=0.5)]
-    # print(blink_times)
-    # a = []
-    # for t in range(int(data['time'].tail(1)) - hl_win_size + 1):
-    #     cur_data = data[(data['time'] > t) & (data['time'] <= (t + hl_win_size))]
-    #
-    #     bt = [i[0] for i in find_peaks(cur_data['EyeBlink_L'], delta=0.5)]
-    #
-    #     sm = cur_data['MouthSmile_R'].mean()
-    #     sv = cur_data['MouthSmile_R'].var()
-    #
-    #     a.append((t, len(bt), sm, sv))
-    #
-    # bts = scale_list([i[1] for i in a])
-    # sms = scale_list([i[2] for i in a])
-    # svs = scale_list([i[3] for i in a])
-    # print([i[2] for i in a])
-    # print(sms)
+    # blink frequency
+    # smile left (36)
+    # smile right (37)
+    # mouth dimple left (38)
+    # mouth dimple right (39)
+    # lips strech left (40)
+    # lips strech right (41)
+    # mouth frown left (42)
+    # mouth frown right (43)
+    # data.to_csv('d.csv')
+    # quit()
+
+    # for each possible window:
+    #   sum(for each au, average it's value)
+    clip_len = int(data['time'].tail(1).values-data['time'].head(1).values)  # in seconds
+    l = [0] * (clip_len - hl_win_size + 1)                                   # amount of possible hl windows
+
+    # df of windows properties
+    windows_df = pd.DataFrame({'blinks': l, 'smile': l, 'mouth_dimple': l,
+                               '_begin_frame':[i*fps for i in range(len(l))],
+                               '_end_frame':[(i+hl_win_size)*fps for i in range(len(l))]})
+    windows_df[['mouth_dimple','smile']] = windows_df[['mouth_dimple','smile']].astype(float)
+
+    # create a list of times of blinks (in frames-times)
+    blink_times_L = [i[0] for i in find_peaks(data['EyeBlink_L'], delta=data['EyeBlink_L'].mean()/2)]
+    blink_times_R = [i[0] for i in find_peaks(data['EyeBlink_R'], delta=data['EyeBlink_R'].mean()/2)]
+    blink_times = blink_times_L if (len(blink_times_L) > len(blink_times_R)) else blink_times_R
+
+    for idx, row in windows_df.iterrows():
+        windows_df.set_value(idx, 'blinks', len([t for t in blink_times if row._end_frame >= t >= row._begin_frame]))
+        windows_df.set_value(idx, 'mouth_dimple',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:,'MouthDimple_L'].mean(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:,'MouthDimple_R'].mean())))
+        windows_df.set_value(idx, 'smile',
+                             np.mean((data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:,'MouthSmile_L'].mean(),
+                                      data.iloc[int(row._begin_frame):int(row._end_frame)].loc[:,'MouthSmile_R'].mean())))
+
+
+    windows_df.ix[:,'mouth_dimple':] = windows_df.ix[:,'mouth_dimple':].apply(scale)
+    windows_df['summ'] = windows_df.iloc[:,2:].sum(axis=1)
+
+    return int(windows_df.loc[[windows_df.summ.idxmax()]]._begin_frame \
+           + fps*hl_margins[0] + int(data.ind.head(1)))             # best frame + seconds from beginning + start idx
+
+    # return idx + hl_margins[0]
+
+    # jaw open? (25)
+    # lips together (26)
+    # jaw left (27)
+    # jaw right(28)
+    # jaw fwd (29)
+    # lip upper up left (30)
+    # lip upper up right (31)
+    # lip upper close (34)
+    # lip lower close (35)
+
+
 
 
     # for (t, bt, sm, sv) in a:
@@ -367,10 +407,8 @@ def get_smart_hl_pivot_ind(data, hl_win_size):
     # for i in range(len(a)):
     #     print("%i, %.2f, %.2f, %.2f" % (a[i][0], bts[i], sms[i], svs[i]))
 
-    data.to_csv('b.csv')
-    quit()
 
-    pass
+
 
 
 def set_window_size(hl_margins, is_smart_hl):
@@ -387,11 +425,13 @@ def set_window_size(hl_margins, is_smart_hl):
 
     # for idx, data in raw_df.groupby(level=[0,1,2], sort=False):
     for idx, data in raw_df[raw_df.new_response_type == 'watch'].groupby(level=[0,1,2], sort=False):
-        # if idx != ('203025663', '10', 'watch'):
+        # if idx[0] != '200398733':
+        # if idx != ('336079314', '10', 'watch'):
+        # if idx != ('203025663', '9', 'watch'):
         #     continue
 
         # gets the index to build the hl window around it
-        hl_pivot_ind = get_smart_hl_pivot_ind(data, sum(hl_margins)) \
+        hl_pivot_ind = get_smart_hl_pivot_ind(data, hl_margins) \
             if is_smart_hl else int(data.iloc[[-1]].ind)
 
         clip_start_hl_ind = hl_pivot_ind - hl_margins[0]*fps
@@ -407,7 +447,6 @@ def set_window_size(hl_margins, is_smart_hl):
     raw_df = raw_df.reorder_levels(['subj_id', 'clip_id', 'response_type'])
 
     export_df_to_pickle(raw_df, PICKLES_FOLDER + '/org_raw_with_hl.pickle')
-
 
 def segmentize(seg_length, is_hl=True):
 

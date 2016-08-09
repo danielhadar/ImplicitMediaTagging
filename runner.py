@@ -39,6 +39,7 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                 learning_models_list, ratings_axes_list, cv_models_list, is_second_learner, is_majority_vote):
     f.write("Start Time: %s\n" % datetime.now().strftime("%H:%M:%S"))
 
+
     print(" > Starting Preprocessing...")
     if run_preprocessing:
         create_raw(is_hl=is_hl_in_preprocessing)
@@ -149,17 +150,17 @@ if __name__ == '__main__':
     mega_runner(open('dummy.csv', 'w'),
                 run_preprocessing=False, is_hl_in_preprocessing=False,
 
-                set_win_size=False, hl_margins=(5,1), is_smart_hl=False,
+                set_win_size=True, hl_margins=(5,1), is_smart_hl=False,
 
-                run_segmentize=False, is_hl=True, segments_length=50,                                # to avoid hl start here
+                run_segmentize=True, is_hl=True, segments_length=50,                                # to avoid hl start here
 
-                run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+                run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
                 is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS,
 
                 run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=False, scale_x=True, use_single_predicted_Y_foreach_clip=True,
 
-                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(6,7),
+                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(2,10),
                 learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
                 is_second_learner=False,
 

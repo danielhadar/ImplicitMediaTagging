@@ -200,7 +200,7 @@ def find_peaks(v, delta=0.1, x = None):
     if not np.isscalar(delta):
         sys.exit('Input argument delta must be a scalar')
 
-    if delta <= 0:
+    if delta < 0:
         sys.exit('Input argument delta must be positive')
 
     mn, mx = np.Inf, -np.Inf
@@ -219,12 +219,14 @@ def find_peaks(v, delta=0.1, x = None):
 
         if lookformax:
             if this < mx-delta:
+            # if this < delta:
                 maxtab.append((mxpos, mx))
                 mn = this
                 mnpos = x[i]
                 lookformax = False
         else:
             if this > mn+delta:
+            # if this > delta:
                 mintab.append((mnpos, mn))
                 mx = this
                 mxpos = x[i]

@@ -6,18 +6,8 @@ import openpyxl
 import pickle
 from features import *
 from utils import *
+import dictionaries
 
-
-def draw_heatmap(df):
-    t = df[df.clip_id == 5].loc[:,'time'].tolist()
-
-    for idx, field in enumerate(BLENDSHAPES):
-        s = df[df.clip_id == 5].loc[:,field].tolist()
-        plt.subplot(len(BLENDSHAPES), 1, idx+1)
-        plt.plot(t, s)
-
-
-    plt.show()
 
 # -----------------------------------
 # --- Objective Ratings (Phase A) ---
@@ -485,7 +475,7 @@ def segmentize(seg_length, is_hl=True):
 
         cur_clip_id = idx[2]
 
-        amount_of_seg, reminder = divmod(len(data),seg_length)
+        [amount_of_seg,_] = divmod(len(data),seg_length)
         for i in range(amount_of_seg):
             data.ix[(i*seg_length):(((i+1)*seg_length)),'clip_id'] = str(str(cur_clip_id) + '_' + str(i+1))
 
@@ -509,6 +499,40 @@ def segmentize(seg_length, is_hl=True):
     else:
         export_df_to_pickle(df, PICKLES_FOLDER + '/raw.pickle')
 
+
+def add_overlap(overlap_percent, seg_length, is_hl=True):
+    ratings_df, big5_df, objective_df, raw_df, hl_df = load_all_dfs(org=False)
+
+    if is_hl:
+        df = hl_df.loc[hl_df.index.get_level_values('response_type') == 'hl']
+        work_on = 'hl'
+    else:
+        df = raw_df.loc[raw_df.index.get_level_values('response_type') == 'watch']
+        work_on = 'watch'
+
+    dfs_array = []
+
+    for (prev_idx, prev_data), (idx, data), (next_idx, next_data) in previous_and_next_iterator(df.groupby(level=[0, 1, 2], sort=False)):
+        new_df = pd.DataFrame()
+
+        if next_idx and idx[1].split('_')[0] == next_idx[1].split('_')[0]:    # not last segment
+            next_data_to_attach = next_data.head(int(len(data) * overlap_percent / 100))
+            next_data_to_attach.index = pd.MultiIndex.from_tuples([idx for i in range(len(next_data_to_attach))],
+                                                                  names=['subj_id','clip_id','response_type'])
+            new_df = pd.concat([data, next_data_to_attach])
+
+        if prev_idx and idx[1].split('_')[0] == prev_idx[1].split('_')[0]:    # not first segment
+            prev_data_to_attach = prev_data.tail(int(len(data) * overlap_percent / 100))
+            prev_data_to_attach.index = pd.MultiIndex.from_tuples([idx for i in range(len(prev_data_to_attach))],
+                                                                  names=['subj_id','clip_id','response_type'])
+            if not new_df.empty:    # not last nor first segment
+                new_df = pd.concat([prev_data_to_attach, new_df])
+            else:                   # last segment
+                new_df = pd.concat([prev_data_to_attach, data])
+
+        dfs_array.append(new_df)
+
+    export_df_to_pickle(pd.concat([d for d in dfs_array]), PICKLES_FOLDER + '/overlap_df.pickle')
 
 
 if __name__ == '__main__':
@@ -570,12 +594,26 @@ if __name__ == '__main__':
     #   > Majority Vote subjects ratings
 
     df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
-    majority_objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
-    majority_objective_df.drop(majority_objective_df.columns[[0,1,4,5,6,7,8,9]], axis=1, inplace=True)
-    for idx, data in df.groupby(level=1):
-        majority_objective_df.loc[idx, 'rewatch'] = get_majoity(data.rewatch.tolist(), bin=True, th=df.rewatch.mean())
-        majority_objective_df.loc[idx, 'likeability'] = get_majoity(data.likeability.tolist(), bin=True, th=df.likeability.mean())
-    export_df_to_pickle(majority_objective_df, PICKLES_FOLDER + '/majority_objective.pickle')
+
+    # objective
+    # majority_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
+    # majority_df.drop(majority_df.columns[[4,5,6,7,8,9]], axis=1, inplace=True)
+    # for idx, data in df.groupby(level=1):
+    #     majority_df.loc[idx, 'valence'] = get_majoity(data.valence.tolist(), bin=True, th=df.valence.mean())
+    #     majority_df.loc[idx, 'arousal'] = get_majoity(data.arousal.tolist(), bin=True, th=df.arousal.mean())
+    #     majority_df.loc[idx, 'rewatch'] = get_majoity(data.rewatch.tolist(), bin=True, th=df.rewatch.mean())
+    #     majority_df.loc[idx, 'likeability'] = get_majoity(data.likeability.tolist(), bin=True, th=df.likeability.mean())
+
+    # subjective
+    majority_df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
+    majority_df.drop(majority_df.columns[[4]], axis=1, inplace=True)
+    for idx, data in df.iterrows():
+        majority_df.loc[idx, 'valence'] = 1 if data.valence>df.valence.mean() else 0
+        majority_df.loc[idx, 'arousal'] = 1 if data.arousal>df.arousal.mean() else 0
+        majority_df.loc[idx, 'rewatch'] = 1 if data.rewatch>df.rewatch.mean() else 0
+        majority_df.loc[idx, 'likeability'] = 1 if data.likeability>df.likeability.mean() else 0
+
+    export_df_to_pickle(majority_df, PICKLES_FOLDER + '/majority.pickle')
 
     # --- RUN ONLY ONCE: end ---
 

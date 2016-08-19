@@ -7,7 +7,10 @@ from scipy.stats import skew
 from scipy.stats import kurtosis
 from sklearn.metrics import r2_score
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import matthews_corrcoef
 from math import isnan
+from scipy import cluster
 
 global SUBJECTS_IDS
 
@@ -136,15 +139,6 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
-
-if __name__ == '__main__':
-    y = [[1,2,3,1,1,1],[4,5,6], [5,5,5,5,5], [4,3,2,1]]
-    x = grouper(y, 3)
-    import numpy as np
-    print(np.shape(y))
-    for i in x:
-        print(i)
-
 def export_df_to_pickle(df, export_path):
     df.to_pickle(export_path)
 
@@ -258,10 +252,40 @@ def get_pos_or_neg(list):
             return_list.append(0.0)
     return return_list
 
-def se_of_regression(predicted, actual):
+def se_of_regression(actual, predicted):
     # Standard error of the regression
     # https://www.otexts.org/fpp/4/4
     N = len(predicted)
     return np.sqrt(
         (1/(N-2)) * sum([pow((a-b),2) for a,b in zip(predicted, actual)])
     )
+
+def balanced_accuracy_score(actual, predicted):
+    # balanced accuracy score: https://en.wikipedia.org/wiki/Evaluation_of_binary_classifiers
+    # (TP/P + TN/N)/2
+    # matrix is: [[TN,FN],[FP,TP]]
+    from sklearn.metrics import confusion_matrix
+    [[tn, fn],[fp, tp]] = confusion_matrix(predicted, actual)
+
+    return (tp/(tp+fp) + tn/(tn+fn))/2
+
+def my_kmeans(col, n_quants=4, quantization_method='random'):
+    # implemented so quantization could be done using apply
+    return cluster.vq.kmeans2(col.values, n_quants, thresh=1e-02, minit=quantization_method, missing='warn')[1]
+
+def previous_and_next_iterator(iterable):
+    # iterates over 'iterable' while allowing access to prev and next
+    # http://stackoverflow.com/questions/1011938/python-previous-and-next-values-inside-a-loop
+    # modified for df.groupby, changed None of beginning and end to tuples of (None,None)
+    from itertools import tee, islice, chain
+
+    prevs, items, nexts = tee(iterable, 3)
+    prevs = chain([(None, None)], prevs)
+    nexts = chain(islice(nexts, 1, None), [(None, None)])
+    return zip(prevs, items, nexts)
+
+if __name__ == '__main__':
+    mylist = ['banana', 'orange', 'apple', 'kiwi', 'tomato']
+
+    for previous, item, nxt in previous_and_next_iterator(mylist):
+        print("Item is now", item, "next is", nxt, "previous is", previous)

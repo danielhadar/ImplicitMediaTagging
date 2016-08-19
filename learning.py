@@ -33,14 +33,14 @@ def learning_load_all_dfs(use_hl=False, use_both_for_obj=False):
     else:
         objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
 
-    majority_objective_df = load_pickle_to_df(PICKLES_FOLDER + '/majority_objective.pickle')
+    majority_df = load_pickle_to_df(PICKLES_FOLDER + '/majority.pickle')
     ratings_df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
     big5_df = load_pickle_to_df(PICKLES_FOLDER + '/big5.pickle')
     raw_df = load_pickle_to_df(PICKLES_FOLDER + '/raw.pickle')
 
     print(" > Done Loading!\n")
 
-    return all_features_df, df_moments, df_quantized, df_dynamic, df_misc, objective_df, ratings_df, big5_df, raw_df, majority_objective_df
+    return all_features_df, df_moments, df_quantized, df_dynamic, df_misc, objective_df, ratings_df, big5_df, raw_df, majority_df
 
 
 
@@ -333,13 +333,13 @@ def run_learning(X_train, Y_train, learning_model, is_normalized=False, args=[])
 
 def calculate_corr(actual_y, predicted_y, method):
 
-    if method == 'acc':
-        return 0, (accuracy_score(actual_y, predicted_y), 0), (0, 0)    # returned as prearson's value
+    if method == 'acc':     # r^2 is f1, corr is acc, p-value is bacc, MCC is last
+        return f1_score(actual_y, predicted_y), (accuracy_score(actual_y, predicted_y), balanced_accuracy_score(actual_y, predicted_y)), (matthews_corrcoef(actual_y, predicted_y), 0)
     else:
         if np.var(actual_y) == 0:
             return r2_score(actual_y, predicted_y), (0, pearsonr(actual_y, predicted_y)[1]), (se_of_regression(predicted_y, actual_y), 0) # 5 numbers
         # return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
-        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), (se_of_regression(predicted_y, actual_y), 0) # 5 numbers
+        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), (se_of_regression(actual_y, predicted_y), 0) # 5 numbers
 
 
 # --------------------------

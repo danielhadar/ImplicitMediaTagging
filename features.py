@@ -1,7 +1,6 @@
 from preprocessing import *
 from utils import *
 from scipy import stats as sp
-from scipy import cluster
 
 # --------------------------
 # ---     Loadings       ---
@@ -116,19 +115,14 @@ def create_moments_df_from_raw_df(raw_df, create_over_segmentized):
 # -  Features: Quantized   -
 # --------------------------
 
-def quantize_data_from_raw_df(raw_df, n_quants, quantization_method='random'):
+def quantize_data_from_raw_df(raw_df, n_quants):
     # for each column (i.e. AU) quantize values using kmeans to n_quants values (0 - n-1).
 
-    quantized_df = pd.DataFrame(index=raw_df.index)
-    quantized_df['time'] = raw_df['time']
-    quantized_df['is_locked'] = raw_df['is_locked']
-
-    for col in raw_df.iloc[:,2:]:
+    quantized_df = raw_df.copy().iloc[:,2:]
+    for col in quantized_df:
         # skipping 'time' and 'is_locked', quantize each column (au) in relation to itself
-        # print("Processing Column: " + col)
-        # quantized = cluster.vq.kmeans2(raw_df.values, n_quants, thresh=1e-02, minit=quantization_method, missing='warn')
-        quantized = cluster.vq.kmeans2(raw_df[col].values, n_quants, thresh=1e-02, minit=quantization_method, missing='warn')
-        quantized_df[col] = quantized[1]    # the quantization labels ([0] has the centroids)
+        # the quantization labels ([0] has the centroids)
+        quantized_df[col] = cluster.vq.kmeans2(quantized_df[col].values, k=n_quants, iter=300, thresh=1e-02, missing='warn')[1]
 
     return quantized_df
 
@@ -141,26 +135,25 @@ def create_quantized_features(quantized_df, n_quants):
     #   (4!) expression_average_volume: average of all aus across expression    (len = 1)
 
     list_of_all_dfs_to_concat = []
-    q_df = quantized_df.iloc[:,2:]
 
     # each (subj,clip) amount of frames for each au
-    expression_sum = q_df.groupby(level=[0,1]).count()
+    expression_sum = quantized_df.groupby(level=[0,1]).count()
 
     # each (subj,clip) amount of non_zeros for each au
-    expression_non_zero = q_df.groupby(level=[0,1]).apply(lambda col: (col!=0).sum())
+    expression_non_zero = quantized_df.groupby(level=[0,1]).apply(lambda col: (col!=0).sum())
 
     # (1) expression_ratio
-    expression_ratio = expression_non_zero / expression_sum
-    expression_ratio.columns = [name + '_ratio' for name in q_df.columns.tolist()]
+    expression_ratio = (expression_non_zero / expression_sum).apply(scale)
+    expression_ratio.columns = [name + '_ratio' for name in quantized_df.columns.tolist()]
     list_of_all_dfs_to_concat.append(expression_ratio)
 
     # (2) expression_level
-    expression_level = q_df.groupby(level=[0,1]).mean()
-    expression_level.columns = [name + '_level' for name in q_df.columns.tolist()]
+    expression_level = quantized_df.groupby(level=[0,1]).mean().apply(scale)
+    expression_level.columns = [name + '_level' for name in quantized_df.columns.tolist()]
     list_of_all_dfs_to_concat.append(expression_level)
 
     # (3) expression_average_length
-    # todo: implement (using talia's countBlocks)
+    # todo
 
     # (4) expression_average_volume
     expression_average_volume = pd.Series(expression_non_zero.mean(axis=1), name='average_volume')
@@ -188,17 +181,15 @@ def create_transition_matrix_dict(quantized_df, n_quants):
     from collections import Counter
     print(" ... Computing Transition Matrix ...")
 
-    q_df = quantized_df.iloc[:,2:]
     all_subjects_transition_matrices_dict = {}
 
-    for subj_id, clip_id in q_df.index.unique():
+    for subj_id, clip_id in quantized_df.index.unique():
 
         # print("Processing: " + subj_id + ', ' + str(clip_id))
         all_subjects_transition_matrices_dict[(subj_id, clip_id)] = {}
 
-        for au in q_df:
-            cur_au = q_df.loc[(subj_id,clip_id)][au]    # current column
-            # cur_au = q_df.loc[(subj_id,clip_id), au]    # current column
+        for au in quantized_df:
+            cur_au = quantized_df.loc[(subj_id,clip_id)][au]    # current column
             all_subjects_transition_matrices_dict[(subj_id, clip_id)][au] = np.zeros([n_quants, n_quants], dtype=np.int)
 
             # for each transition in current au (e.g. x=1, y=2, c=amount of 1->2)
@@ -305,31 +296,43 @@ def count_smiles(df, th=0.75):
 # --------------------------
 
 def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
-                    create_moments_over_hl=False, create_moments_over_segmentized=False):
+                    create_moments_over_hl=False, create_moments_over_segmentized=False, use_overlap=False):
 
     ratings_df, big5_df, objective_df, raw_df, hl_df = load_all_dfs(org=False)
-    raw_df_no_slice = raw_df.copy()
-    hl_df_no_slice = hl_df.copy()
+    ol_df = load_pickle_to_df(PICKLES_FOLDER + '/overlap_df.pickle')
 
     if slice_for_specific_bs:
         hl_df = slice_features_df_for_specific_blendshapes(hl_df, bs_list)
         raw_df = slice_features_df_for_specific_blendshapes(raw_df, bs_list)
 
     if use_hl:
+        work_df = hl_df
+        work_df_no_slice = hl_df.copy()
+        work_on = 'hl'
+    else:
+        work_df = raw_df
+        raw_df_no_slice = raw_df.copy()
+        work_on = 'watch'
+
+    if use_overlap:
+        work_df = ol_df
+        work_df_no_slice = ol_df.copy()
+
+    if use_hl:
         # -- moments features --
         print(" -- Moments -- ")
         if create_moments_over_hl:
             # either moments are calculated over the 'hl' part only or over the entire watching time ('watch'+'hl')
-            df = create_moments_df_from_raw_df(hl_df.xs('hl', level=2), create_over_segmentized=create_moments_over_segmentized)
+            df = create_moments_df_from_raw_df(work_df.xs('hl', level=2), create_over_segmentized=create_moments_over_segmentized)
         else:
             df = create_moments_df_from_raw_df(
-                hl_df[hl_df.index.get_level_values('response_type').isin(['watch', 'hl'])].reset_index(level=2, drop=True),
+                work_df[work_df.index.get_level_values('response_type').isin(['watch', 'hl'])].reset_index(level=2, drop=True),
                 create_over_segmentized=create_moments_over_segmentized)
         export_df_to_pickle(df, PICKLES_FOLDER + '/features/moments_features_hl.pickle')
 
         # -- quantized the data --
         print(" -- Quantized --")
-        df = quantize_data_from_raw_df(hl_df.xs('hl', level=2), 4)
+        df = quantize_data_from_raw_df(work_df.xs('hl', level=2), 4)
         export_df_to_pickle(df, PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
 
         # -- quantized features --
@@ -350,8 +353,8 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
 
         # -- miscellaneous features --
         print(" -- Miscellaneous --")
-        blink_df = count_blinks(hl_df_no_slice.xs('hl', level=2))
-        smile_df = count_smiles(hl_df_no_slice.xs('hl', level=2))
+        blink_df = count_blinks(work_df_no_slice.xs('hl', level=2))
+        smile_df = count_smiles(work_df_no_slice.xs('hl', level=2))
         misc_df = pd.concat([blink_df, smile_df], axis=1)
         export_df_to_pickle(misc_df, PICKLES_FOLDER + '/features/misc_features_hl.pickle')
 
@@ -365,25 +368,21 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
         all_features_df.to_csv(CSV_FOLDER + '/all_features_df_hl.csv')
         export_df_to_pickle(all_features_df, PICKLES_FOLDER + '/features/all_features_hl.pickle')
 
-
-    else:   # not using hl
+    else:       # not using hl
         # -- moments features --
         print(" > Starting Moments Features")
         df = create_moments_df_from_raw_df(raw_df.xs('watch', level=2), create_over_segmentized=create_moments_over_segmentized)
         export_df_to_pickle(df, PICKLES_FOLDER + '/features/moments_features.pickle')
-
 
         # -- quantized the data --
         print(" > Starting Quantized Features")
         df = quantize_data_from_raw_df(raw_df.xs('watch', level=2), 4)
         export_df_to_pickle(df, PICKLES_FOLDER + '/4-quantized_data.pickle')
 
-
         # -- quantized features --
         quantized_watch_df = load_pickle_to_df(PICKLES_FOLDER + '/4-quantized_data.pickle')
         df = create_quantized_features(quantized_watch_df, 4)
         export_df_to_pickle(df, PICKLES_FOLDER + '/features/quantized_features.pickle')
-
 
         # -- dynamic features (based on quantized data) --
         print(" > Starting Dynamic Features")
@@ -402,7 +401,6 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
         smile_df = count_smiles(raw_df_no_slice.xs('watch', level=2))
         misc_df = pd.concat([blink_df, smile_df], axis=1)
         export_df_to_pickle(misc_df, PICKLES_FOLDER + '/features/misc_features.pickle')
-
 
         # -- create all features df --
         print(" > Creating All Features DF")

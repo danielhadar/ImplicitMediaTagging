@@ -148,7 +148,7 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
 
 if __name__ == '__main__':
 
-    with open('./logs/log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
+    with open(LOG_FOLDER + 'log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
         f.write("win size, smart hl, seg length, overlap, blendshapes, obj or subj, model for each subject, 2nd learner, majority vote, pca each axis, scale_by, V, , , , A, , , , L, , , , R, , , ,\n")
 
         for hl_margins in [(5,1), (3,1)]:

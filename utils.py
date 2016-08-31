@@ -11,6 +11,9 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import matthews_corrcoef
 from math import isnan
 from scipy import cluster
+from sklearn.decomposition import PCA
+from sklearn.cross_validation import LeavePLabelOut
+import pandas as pd
 
 global SUBJECTS_IDS
 
@@ -64,6 +67,8 @@ EYES_AREA_BS = ['EyeBlink_L', 'EyeBlink_R', 'EyeSquint_L', 'EyeSquint_R', 'Brows
 SMILE_BS = ['MouthSmile_L', 'MouthSmile_R']
 
 BLINKS_BS = ['EyeBlink_L', 'EyeBlink_R']
+
+inf = float('Inf')
 
 def flatten_list(l):
     if np.ndim(l) == 1:
@@ -132,7 +137,11 @@ def unique_sequences_in_list(l):
 
     return ret_list
 
-
+def list_to_unique_list_preserve_order(list):
+    # http://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-in-python-whilst-preserving-order
+    seen = set()
+    seen_add = seen.add
+    return [i for i in list if not (i in seen or seen_add(i))]
 
 def grouper(iterable, n, fillvalue=None):
     from itertools import zip_longest
@@ -283,6 +292,26 @@ def previous_and_next_iterator(iterable):
     prevs = chain([(None, None)], prevs)
     nexts = chain(islice(nexts, 1, None), [(None, None)])
     return zip(prevs, items, nexts)
+
+def slip_by_underline(str):
+    return str.split('_')[0]
+
+def add_original_clip(df):
+    # adds index column 'org_clip' based upon index column 'clip_id' and return ['subj_id', 'clip_id', 'org_clip']
+    df['org_clip'] = df.index.get_level_values('clip_id')
+    df['org_clip'] = df['org_clip'].apply(lambda x: int(x.split('_')[0]))
+    return df.set_index('org_clip', append=True).reorder_levels(['subj_id', 'clip_id', 'org_clip'])
+
+def add_y(df, y_df, axis):
+    # adds y ratings to the df
+    df = df.reset_index('clip_id')
+    for clip in y_df.index:
+        df.loc[clip, axis[0].strip()] = y_df.loc[clip, axis[0].strip()]
+    return df.set_index('clip_id', append=True)
+
+def scale_column_by(df, column_name, scale_by):
+    df[column_name] = df.groupby(level=scale_by)[column_name].apply(scale)
+    return df
 
 if __name__ == '__main__':
     mylist = ['banana', 'orange', 'apple', 'kiwi', 'tomato']

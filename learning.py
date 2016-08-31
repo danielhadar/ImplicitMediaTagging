@@ -48,6 +48,18 @@ def learning_load_all_dfs(use_hl=False, use_both_for_obj=False):
 # --  Feature Selection   --
 # --------------------------
 
+def pca(pca_each_axis, df_to_pca, df_not_to_pca, fs_n_components):
+    feat_arr = df_not_to_pca
+    if pca_each_axis:
+        for df in df_to_pca:
+            feat_arr.append(pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(df), index=df.index))
+        feat_df = pd.concat(feat_arr, axis=1)
+    else:
+        all_feat_df = pd.concat(df_to_pca, axis=1)
+        feat_df = pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(all_feat_df),
+                               index=all_feat_df.index)
+    return feat_df
+
 def feature_selection(X, fs_model_name, n_components=3):
 
     if fs_model_name == 'pca':
@@ -333,122 +345,149 @@ def run_learning(X_train, Y_train, learning_model, is_normalized=False, args=[])
 
 def calculate_corr(actual_y, predicted_y, method):
 
-    if method == 'acc':     # r^2 is f1, corr is acc, p-value is bacc, MCC is last
+    if method == 'acc':     # r^2 is f1, corr is acc, p-value is bacc, MCC is 4th
         return f1_score(actual_y, predicted_y), (accuracy_score(actual_y, predicted_y), balanced_accuracy_score(actual_y, predicted_y)), (matthews_corrcoef(actual_y, predicted_y), 0)
     else:
         if np.var(actual_y) == 0:
             return r2_score(actual_y, predicted_y), (0, pearsonr(actual_y, predicted_y)[1]), (se_of_regression(predicted_y, actual_y), 0) # 5 numbers
-        # return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
-        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), (se_of_regression(actual_y, predicted_y), 0) # 5 numbers
+        return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), spearmanr(actual_y, predicted_y) # 5 numbers
+        # return r2_score(actual_y, predicted_y), pearsonr(actual_y, predicted_y), (se_of_regression(actual_y, predicted_y), 0) # 5 numbers
 
+# --------------------------
+# ---      Utils         ---
+# --------------------------
+def drop_clips(df, clips_list):
+    # drops the clips in clips_list from the df. 'isinstance' is for y_df where clip_ids are ints (10) and not strings (10_i)
+    return df.reset_index('clip_id')[~df.reset_index('clip_id').clip_id.apply(lambda x: int(x.split('_')[0]) if isinstance(x, str) else x).isin(clips_list)].set_index('clip_id', append=True)
+
+def drop_subjects(df, subjects_list):
+    # drops the subjects is sucbjects_list from the df.
+    # if 'subj_id' in df.index.names:     # when running over objective_df there's no 'subj_id' column
+    return df.reset_index('subj_id')[~df.reset_index('subj_id').subj_id.isin(subjects_list)].set_index('subj_id', append=True).reorder_levels(['subj_id','clip_id'])
+    # else:
+    #     return df
 
 # --------------------------
 # - Implicit Media Tagging -
 # --------------------------
 
+def second_learner(df, cv_model_name, learning_model_name):
+    # df is results_df
+    return_df = df.copy()
+
+    # add column of first learner's x - mean and variance
+    df['predicted_mean'] = df.predicted_full.apply(np.mean)
+    df['predicted_var'] = df.predicted_full.apply(np.var)
+    df['first_learner_x'] = df[['predicted_mean', 'predicted_var']].values.tolist()
+    # df.drop(['predicted_mean', 'predicted_var'], axis=1, inplace=True)
+
+    # Cross-Validation
+    if cv_model_name == 'LeaveSubjOut':
+        lpl = LeavePLabelOut(df.index.get_level_values('subj_id'), p=1)
+    elif cv_model_name == 'LeaveClipOut':
+        lpl = LeavePLabelOut(df.index.get_level_values('org_clip'), p=1)
+    elif cv_model_name == 'LeaveOneClipOfSubj':
+        lpl = LeavePLabelOut([str(i + '_' + str(j)) for i, j, k in df.index.tolist()], p=1)
+
+    for train_index, test_index in lpl:  # leave p clips out
+        # Train
+        # train_labels = [i for i in set(feat_df.iloc[train_index,:].index.get_level_values('org_clip'))]
+        y_train = df.ix[train_index, 'actual_y']
+        clf = run_learning(df.ix[train_index, ['predicted_mean', 'predicted_var']], y_train, learning_model_name, is_normalized=True)
+        # Test
+        test_labels = list_to_unique_list_preserve_order([(i, j) for i, j in df.ix[test_index, :].index.tolist()])
+        predicted_y = clf.predict(df.ix[test_index, ['predicted_mean', 'predicted_var']])
+        actual_y = df.ix[test_index, 'actual_y'].tolist()
+        if cv_model_name in {'LeaveSubjOut', 'LeaveClipOut', 'LeaveOneClipOfSubj'}:
+            for idx, (subj_id, org_clip) in enumerate(test_labels):
+                # possible to scale predicted_y here
+                return_df.loc[(subj_id, org_clip), ['predicted_y', 'actual_y']] = pd.Series([predicted_y[idx], actual_y[idx]]).values
+
+    return return_df
+
+
 def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, obj_or_subj,
-                           scale_x, model_for_each_subject, to_drop_list,
-                           fs_model_name, fs_n_components, axis, learning_model_name, cv_model_name, is_second_learner,
+                           scale_x, model_for_each_subject, clip_drop_list, subj_drop_list,
+                           fs_model_name, fs_n_components, pca_each_axis, axis, learning_model_name, cv_model_name, is_second_learner,
                            f=None, use_single_predicted_Y_foreach_clip=False, corr_method='normal'):
 
+    if clip_drop_list:      # drop clips
+        [y_df, df_moments, df_quantized, df_dynamic, df_misc] = [drop_clips(df, clip_drop_list) for df in
+                                                                 [y_df, df_moments, df_quantized, df_dynamic, df_misc]]
+    if subj_drop_list:      # drop subjects
+        [y_df, df_moments, df_quantized, df_dynamic, df_misc] = [drop_subjects(df, subj_drop_list) for df in
+                                                                 [y_df, df_moments, df_quantized, df_dynamic, df_misc]]
+    results_df = pd.DataFrame(index=pd.MultiIndex(levels=[[], []], labels=[[], []], names=['subj_id', 'org_clip']),
+                              columns=['predicted_y', 'actual_y', 'predicted_full', 'actual_full'])
+
     if model_for_each_subject:
+        for subj_id in set(y_df.index.get_level_values(level='subj_id')):
+            [cur_y_df, cur_df_moments, cur_df_quantized, cur_df_dynamic, cur_df_misc] = [df.loc[[subj_id]] for df in [y_df, df_moments, df_quantized, df_dynamic, df_misc]]
 
-        subjects_corr = []
+            # PCA
+            feat_df = pca(pca_each_axis=True, df_to_pca=[cur_df_moments, cur_df_quantized, cur_df_dynamic],
+                          df_not_to_pca=[cur_df_misc], fs_n_components=fs_n_components) if fs_model_name == 'pca' \
+                else pd.concat([cur_df_misc, cur_df_moments, cur_df_quantized, cur_df_dynamic], axis=1)
 
-        for subj in dictionaries.SUBJECTS_IDS:
+            # Add Y and Original Clip
+            feat_df = add_y(add_original_clip(feat_df), cur_y_df, axis)
 
-            clips_drop = to_drop_list
-            if obj_or_subj == 'subj':
-                cur_y_df = y_df.loc[[subj]]
-            else:
-                cur_y_df = y_df
+            # Cross-Validation
+            lpl = LeavePLabelOut(feat_df.index.get_level_values('org_clip'), p=1)
+            for train_index, test_index in lpl:     # leave p clips out
+                # Train
+                # train_labels = [i for i in set(feat_df.iloc[train_index,:].index.get_level_values('org_clip'))]
+                y_train = feat_df.iloc[train_index, -1]
+                if np.var(y_train) == 0:
+                    print('subject %s was skipped for 0 variance' % subj_id)
+                    continue
+                clf = run_learning(feat_df.iloc[train_index,:-1], y_train, learning_model_name, is_normalized=True)
+                # Test
+                test_label = feat_df.iloc[test_index,:].index.get_level_values('org_clip').values[0]
+                predicted_y = clf.predict(feat_df.iloc[test_index,:-1])     # number of segments
+                actual_y = feat_df.iloc[test_index, -1].tolist()
+                results_df.loc[(subj_id, test_label), ['predicted_y', 'actual_y', 'predicted_full', 'actual_full']] \
+                    = pd.Series([np.median(predicted_y), actual_y[0], predicted_y, actual_y]).values
 
-            if scale_x:     # scaling WITHIN subject. could be changed to scaled over all subejcts
-                X_moments, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_moments.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-                X_quantized, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_quantized.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-                X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_dynamic.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-                X_misc, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_misc.loc[[subj]].drop(clips_drop).apply(scale), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-            else:
-                X_moments, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_moments.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-                X_quantized, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_quantized.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-                X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_dynamic.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-                X_misc, Y = create_learning_data_features_and_objective_for_single_subject \
-                    (df_misc.loc[[subj]].drop(clips_drop), cur_y_df.drop(clips_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
+    else:       # NOT a model for each subject
+        # PCA
+        feat_df = pca(pca_each_axis=pca_each_axis, df_to_pca=[df_moments, df_quantized, df_dynamic], df_not_to_pca=[df_misc],
+                      fs_n_components=fs_n_components) if fs_model_name == 'pca' \
+            else pd.concat([df_moments, df_quantized, df_dynamic, df_misc], axis=1)
 
-            x_arr = []
-            for X in [X_moments, X_quantized, X_dynamic]:
-                if np.shape(X)[1] > fs_n_components:    # handles case of too short X_features in relation to pca
-                    tmp_x = feature_selection(X, fs_model_name, n_components=fs_n_components)
-                else:
-                    tmp_x = feature_selection(X, fs_model_name, n_components=np.shape(X)[1])
+        # Add Y and Original Clip
+        feat_df = add_y(add_original_clip(feat_df), y_df, axis)
+        seg_size = max([int(s.split('_')[1]) for s in feat_df.index.get_level_values(level='clip_id').tolist()])
 
-                x_arr.append(tmp_x)
-            x_arr.append(X_misc)
+        # Cross-Validation
+        if cv_model_name == 'LeaveSubjOut':
+            lpl = LeavePLabelOut(feat_df.index.get_level_values('subj_id'), p=1)
+        elif cv_model_name == 'LeaveClipOut':
+            lpl = LeavePLabelOut(feat_df.index.get_level_values('org_clip'), p=1)
+        elif cv_model_name == 'LeaveOneClipOfSubj':
+            lpl = LeavePLabelOut([str(i+'_'+str(j)) for i,j,k in feat_df.index.tolist()], p=1)
 
-            feat = np.concatenate(x_arr, axis=1)    # <<<
+        for train_index, test_index in lpl:  # leave p clips out
+            # Train
+            # train_labels = [i for i in set(feat_df.iloc[train_index,:].index.get_level_values('org_clip'))]
+            y_train = feat_df.iloc[train_index, -1]
+            clf = run_learning(feat_df.iloc[train_index, :-1], y_train, learning_model_name, is_normalized=True)
+            # Test
+            test_labels = list_to_unique_list_preserve_order([(i,j) for i,j,k in feat_df.iloc[test_index, :].index.tolist()])
+            predicted_y = clf.predict(feat_df.iloc[test_index, :-1])  # number of segments
+            actual_y = feat_df.iloc[test_index, -1].tolist()
+            if cv_model_name in {'LeaveSubjOut', 'LeaveClipOut', 'LeaveOneClipOfSubj'}:
+                for idx, (subj_id, org_clip) in enumerate(test_labels):
+                    # possible to scale predicted_y here
+                    results_df.loc[(subj_id, org_clip), ['predicted_y', 'actual_y', 'predicted_full', 'actual_full']] \
+                        = pd.Series([np.median(predicted_y[idx:idx + seg_size]), actual_y[idx * seg_size], predicted_y[idx:idx+seg_size], actual_y[idx:idx+seg_size]]).values
 
-            # appended = np.append(np.append(X_moments, X_quantized, axis=1), X_dynamic, axis=1)
-            # for i in range(len(appended)):
-            #     appended[i] = scale(appended[i])
-            # feat = feature_selection(appended, fs_model_name, n_components=fs_n_components)
+    # -- at this point done creating results_df --
 
-            if np.var(Y) == 0:
-                print('subject %s was skipped for 0 variance' % subj)
-                continue
+    # second learner
+    results_df = second_learner(results_df, cv_model_name, learning_model_name) if is_second_learner else results_df
 
-            r2, (pearsonr_val, pearsonr_p_val), (spearman_val, spearman_p_val) \
-                = run(feat, Y, learning_model_name, cv_model_name,
-                      is_scaled=True, is_normalized=True, f=f,
-                      use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
-                      is_second_learner=is_second_learner, corr_method=corr_method)
-
-            subjects_corr.append((pearsonr_val, pearsonr_p_val, subj, r2, spearman_val))
-
-        return subjects_corr
-
-    else:
-        subj_drop = []
-        if subj_drop:
-            dictionaries.SUBJECTS_IDS = [i for i in dictionaries.SUBJECTS_IDS if i not in subj_drop]
-        X_misc, Y = create_learning_data_features_and_objective_for_single_subject(df_misc.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_moments, Y = create_learning_data_features_and_objective_for_single_subject(df_moments.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_quantized, Y = create_learning_data_features_and_objective_for_single_subject(df_quantized.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-        X_dynamic, Y = create_learning_data_features_and_objective_for_single_subject(df_dynamic.drop(subj_drop), y_df.drop(subj_drop), axis[0].strip(), obj_or_subj=obj_or_subj)
-
-        # (a) feature selection over each type of feature separately
-        x_arr = []
-        for X in [X_moments, X_quantized, X_dynamic]:
-            if np.shape(X)[1] > fs_n_components:
-                tmp_x = feature_selection(X, fs_model_name, n_components=fs_n_components)
-            else:
-                tmp_x = feature_selection(X, fs_model_name, n_components=np.shape(X)[1])
-            x_arr.append(tmp_x)
-        x_arr.append(X_misc)
-        feat = np.concatenate(x_arr, axis=1)    # <<<
-
-        # (b) feature selection over all features
-        # feat = np.concatenate([X_misc, X_moments, X_quantized, X_dynamic], axis=1)
-        # feat = feature_selection(feat, fs_model_name, n_components=fs_n_components)
-
-        r2, (pearsonr_val, pearsonr_p_val), (spearman_val, spearman_p_val) \
-            = run(feat, Y, learning_model_name, cv_model_name,
-                  is_scaled=True, is_normalized=True, f=f,
-                  use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
-                  is_second_learner=is_second_learner, corr_method=corr_method)
-
-        return [[pearsonr_val, pearsonr_p_val, '', r2, spearman_val]]
-
-        # print(learning_model_name + ', ' + cv_model_name
-        #       + ', ' + fs_model_name + str(fs_n_components)  + ', ' + axis[0]
-        #       + ', %.3f, ' % pearsonr_val + '%.3f' % pearsonr_p_val)
-
+    return results_df
 
 # --------------------------
 # ---       Main         ---

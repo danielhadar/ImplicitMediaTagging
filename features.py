@@ -308,11 +308,9 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
     if use_hl:
         work_df = hl_df
         work_df_no_slice = hl_df.copy()
-        work_on = 'hl'
     else:
         work_df = raw_df
         raw_df_no_slice = raw_df.copy()
-        work_on = 'watch'
 
     if use_overlap:
         work_df = ol_df

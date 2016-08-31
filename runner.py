@@ -9,73 +9,72 @@ warnings.filterwarnings("ignore")
 
 # LEARNING_MODELS = ['linear_regression', 'ridge', 'lasso', 'SVR', 'NuSVR']
 # LEARNING_MODELS = ['linear_regression', 'ridge            ', 'SVR              ']
-LEARNING_MODELS = ['linear_regression', 'ridge            ']
+# LEARNING_MODELS = ['linear_regression', 'ridge            ']
 # LEARNING_MODELS = ['SVC']
 # LEARNING_MODELS = ['SVR']
 # LEARNING_MODELS = ['ridge']
-# LEARNING_MODELS = ['linear_regression']
+LEARNING_MODELS = ['linear_regression']
 
-# CV_MODELS = ['none']
-# CV_MODELS = ['loo']
-# CV_MODELS = ['LeaveOneClipOutForEachSubject', 'LeaveOneClipOutForAllSubject', 'LeaveOneSubjOut']
-CV_MODELS = ['LeaveOneClipOutForEachSubject']
-# CV_MODELS = ['LeaveOneClipOutForAllSubject']
-# CV_MODELS = ['LeaveOneSubjOut']
+# CV_MODELS = ['LeaveSubjOut', 'LeaveClipOut', 'LeaveOneClipOfSubj']
+CV_MODELS = ['LeaveSubjOut']
+# CV_MODELS = ['LeaveClipOut']
+# CV_MODELS = ['LeaveOneClipOfSubj']
 
 
-RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewatch    ',3)]
+# RATINGS_AXES = [('valence    ',0), ('arousal    ',1), ('likeability',2), ('rewatch    ',3)]
+RATINGS_AXES = [('valence    ',0)]
 # RATINGS_AXES = [('valence    ',0), ('arousal    ',1)]
 # RATINGS_AXES = [('likeability',2), ('rewatch    ',3)]
 # RATINGS_AXES = [('arousal    ',1)]
 # RATINGS_AXES = [('rewatch',3)]
 
 # FS_MODELS = ['none', 'pca']
-# FS_MODELS = ['pca']
-FS_MODELS = ['none']
+FS_MODELS = ['pca']
+# FS_MODELS = ['none']
 
 def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                 set_win_size, hl_margins, is_smart_hl, run_segmentize, is_hl, segments_length, run_overlap, overlap_percent,
                 run_features, is_hl_in_features, create_moments_over_segmentized, is_slice_for_specific_blendshapes, which_blendshapes,
                 use_overlap,
                 run_learning, obj_or_subj, is_hl_in_learning, is_both_for_obj, scale_y, scale_x, use_single_predicted_Y_foreach_clip,
-                is_model_for_each_subject, to_drop_list, fs_models_list, fs_n_components_range,
-                learning_models_list, ratings_axes_list, cv_models_list, is_second_learner, is_majority_vote):
-    f.write("Start Time: %s\n" % datetime.now().strftime("%H:%M:%S"))
+                is_model_for_each_subject, clip_drop_list, subj_drop_list, fs_models_list, fs_n_components_range, pca_each_axis,
+                learning_models_list, ratings_axes_list, cv_models_list, is_second_learner, is_majority_vote, scale_predicted_y_by):
+    # f.write("Start Time: %s\n" % datetime.now().strftime("%H:%M:%S"))
 
 
     print(" > Starting Preprocessing...")
     if run_preprocessing:
         create_raw(is_hl=is_hl_in_preprocessing)
-        f.write("run_preprocessing=True, with: is_hl=%s \n" % (is_hl_in_preprocessing))
-    else:
-        f.write("run_preprocessing=False \n")
+        # f.write("run_preprocessing=True, with: is_hl=%s \n" % (is_hl_in_preprocessing))
+    # else:
+        # f.write("run_preprocessing=False \n")
     print("     Done Preprocessing!\n")
 
 
     print(" > Starting Set Window Size... ")
     if set_win_size:
         set_window_size(hl_margins, is_smart_hl)
-        f.write("set_win_size=True, with: hl_margins=(%i, %i) \n" % (hl_margins[0], hl_margins[1]))
-    else:
-        f.write("set_win_size=False \n")
+        # f.write("set_win_size=True, with: hl_margins=(%i, %i) \n" % (hl_margins[0], hl_margins[1]))
+    # else:
+        # f.write("set_win_size=False \n")
     print("     Done Set Window Size!\n")
 
 
     print(" > Starting Segmentizing... ")
     if run_segmentize:
         segmentize(seg_length=segments_length, is_hl=is_hl)
-        f.write("run_segmentize=True, with: seg_len=%i \n" % (segments_length))
-    else:
-        f.write("run_segmentize=False \n")
+        # f.write("run_segmentize=True, with: seg_len=%i \n" % (segments_length))
+    # else:
+        # f.write("run_segmentize=False \n")
     print("     Done Segmentizing!\n")
 
 
     print(" > Starting Overlap... ")
     if run_overlap:
         add_overlap(overlap_percent=overlap_percent, seg_length=segments_length, is_hl=is_hl)
-        f.write("run_overlap=True, with: ol_percent=%i \n" % (overlap_percent))
-    else:
-        f.write("run_overlap=False \n")
+        # f.write("run_overlap=True, with: ol_percent=%i \n" % (overlap_percent))
+    # else:
+        # f.write("run_overlap=False \n")
     print("     Done Adding Overlap!\n")
 
 
@@ -83,9 +82,9 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
     if run_features:
         create_features(use_hl=is_hl_in_features, slice_for_specific_bs=is_slice_for_specific_blendshapes, bs_list=which_blendshapes,
                         create_moments_over_segmentized=create_moments_over_segmentized, use_overlap=use_overlap)
-        f.write("run_features=True, with: is_hl=%s , specific_blendshapes=%s \n" % (is_hl_in_features, is_slice_for_specific_blendshapes))
-    else:
-        f.write("run_features=False \n")
+        # f.write("run_features=True, with: is_hl=%s , specific_blendshapes=%s \n" % (is_hl_in_features, is_slice_for_specific_blendshapes))
+    # else:
+        # f.write("run_features=False \n")
     print("     Done Creating Features!\n")
 
 
@@ -107,100 +106,139 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
         for cv_model_name in cv_models_list:
             for fs_model_name in fs_models_list:
                 for axis in ratings_axes_list:
-                    for fs_n_components in fs_n_components_range:
-                        for learning_model_name in learning_models_list:
+                    for learning_model_name in learning_models_list:
 
-                            tic = time()
-                            subjects_corr = implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, obj_or_subj=obj_or_subj,
+                        max_result_for_pca = (-inf,-inf,-inf,-inf)
+                        for fs_n_components in fs_n_components_range:
+
+                            results_df = implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, obj_or_subj=obj_or_subj,
                                                                    scale_x = scale_x, model_for_each_subject=is_model_for_each_subject,
-                                                                   to_drop_list=to_drop_list, fs_model_name=fs_model_name,
-                                                                   fs_n_components=fs_n_components, axis=axis,
+                                                                   clip_drop_list=clip_drop_list, subj_drop_list=subj_drop_list, fs_model_name=fs_model_name,
+                                                                   fs_n_components=fs_n_components, pca_each_axis=pca_each_axis, axis=axis,
                                                                    learning_model_name=learning_model_name, cv_model_name=cv_model_name,
                                                                    is_second_learner=is_second_learner,
                                                                    f=f, use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
                                                                    corr_method=corr_method)
 
-                            f.write(learning_model_name + ', ' + cv_model_name + ', '
-                                    + fs_model_name + str(fs_n_components) + ', ' + axis[0] + ', ' +
-                                    str(scale_y) + ', ' + str(scale_x) + ', ' +
-                                    str('%.3f' % np.mean([i[0] for i in subjects_corr])) + ', ' +
-                                    str('%.3f' % np.mean([i[1] for i in subjects_corr])) + ', ' +
-                                    str('%.3f' % np.mean([i[3] for i in subjects_corr])) + '\n')
+                            # Scale predicted_y
+                            results_df = scale_column_by(results_df, 'predicted_y', scale_predicted_y_by) if scale_predicted_y_by else results_df       # 'org_clip' or 'subj_id'
 
-                            # toc = time()
-                            if corr_method == 'acc':
-                                print("%s, %s%.2i, %s, %s: ACC=%.3f, BACC=%.3f, f1=%.3f, MCC=%.3f" %
-                                      (learning_model_name, fs_model_name, fs_n_components, cv_model_name, axis[0],
-                                       np.mean([i[0] for i in subjects_corr]), np.mean([i[1] for i in subjects_corr]),
-                                       np.mean([i[3] for i in subjects_corr]), np.mean([i[4] for i in subjects_corr])))
-                            else:
-                                print("%s, %s%.2i, %s, %s: %.3f, (p=%.3f), r^2=%.3f" %
-                                      (learning_model_name, fs_model_name, fs_n_components, cv_model_name, axis[0],
-                                       np.mean([i[0] for i in subjects_corr]), np.mean([i[1] for i in subjects_corr]),
-                                       np.mean([i[3] for i in subjects_corr])))
-                                   # np.mean([i[4] for i in subjects_corr])))
-                            # print(" In a total time of: %.2f" % (toc-tic))
+                            # Calculate correlations
+                            r2, (pearsonr_val, pearsonr_p_val), (spearman_val, spearman_p_val) = \
+                                calculate_corr(results_df.actual_y.tolist(), results_df.predicted_y.tolist(),
+                                               method=corr_method)
+                            subjects_corr = [r2, pearsonr_val, pearsonr_p_val, spearman_val]
+
+                            max_result_for_pca = subjects_corr if subjects_corr[1] > max_result_for_pca[1] else max_result_for_pca
+
+                        subjects_corr = max_result_for_pca
+
+                        f.write("%.3f, %.3f, %.3f, %.3f\n" % (subjects_corr[1], subjects_corr[2], subjects_corr[0], subjects_corr[3]))
+
+                        if corr_method == 'acc':
+                            print("%s, %s%.2i, %s, %s, %s: ACC=%.3f, BACC=%.3f, f1=%.3f, MCC=%.3f" %
+                                  (learning_model_name, fs_model_name, fs_n_components, cv_model_name, axis[0], scale_predicted_y_by,
+                                   subjects_corr[1], subjects_corr[2], subjects_corr[0], subjects_corr[3]))
+                        else:
+                            print("%s, %s%.2i, %s, %s, %s: %.3f, (p=%.3f), r^2=%.3f, spearman=%.3f" %
+                                  (learning_model_name, fs_model_name, fs_n_components, cv_model_name, axis[0], scale_predicted_y_by,
+                                   subjects_corr[1], subjects_corr[2], subjects_corr[0], subjects_corr[3]))
+
 
 
 if __name__ == '__main__':
 
-    # with open('./logs/log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
-    #
-    #     for smart_hl in [False]:
-    #         a = True
-    #         for sl in [10, 30, 50, 70]:
-    #             b = True
-    #             for second_learner in [True, False]:
-    #
-    #                 print("Starting: smart_hl=%s, sl=%i, obj/subj=%s, 2nd=%s" % (str(smart_hl), sl, 'subj', str(second_learner)))
-    #                 f.write("Starting: smart_hl=%s, sl=%i, obj/subj=%s, 2nd=%s\n" % (str(smart_hl), sl, 'subj', str(second_learner)))
-    #
-    #                 mega_runner(open('dummy.csv', 'w'),
-    #                             run_preprocessing=False, is_hl_in_preprocessing=False,
-    #
-    #                             set_win_size=True if a else False, hl_margins=(5, 1), is_smart_hl=smart_hl,
-    #
-    #                             run_segmentize=True if b else False, is_hl=True, segments_length=sl,
-    #
-    #                             run_features=True if b else False, is_hl_in_features=True, create_moments_over_segmentized=False,
-    #                             is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS,
-    #
-    #                             run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
-    #                             is_both_for_obj=True, scale_y=True, scale_x=True,
-    #                             use_single_predicted_Y_foreach_clip=True,
-    #
-    #                             is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS,
-    #                             fs_n_components_range=range(9, 10),
-    #                             learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES,
-    #                             cv_models_list=CV_MODELS,
-    #                             is_second_learner=second_learner,
-    #
-    #                             is_majority_vote=True)
-    #
-    #                 a = False
-    #                 b = False
-    #
-    # f.close()
-    #
-    #
-    #
-    mega_runner(open('dummy.csv', 'w'),
-                run_preprocessing=False, is_hl_in_preprocessing=False,
+    with open('./logs/log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
+        f.write("win size, smart hl, seg length, overlap, blendshapes, obj or subj, model for each subject, 2nd learner, majority vote, pca each axis, scale_by, V, , , , A, , , , L, , , , R, , , ,\n")
 
-                set_win_size=False, hl_margins=(5,1), is_smart_hl=False,
+        for hl_margins in [(5,1), (3,1)]:
+            for is_smart_hl in [True, False]:
+                setwinsize = True
+                for seg_len in [10,30,50]:
+                    runsegmentize = True
+                    for ol_percent in [0, 25, 50, 75]:
+                        runoverlap = True if ol_percent > 0 else False
+                        for bs in [(BLENDSHAPES, "all"), (MY_BS, "my")]:
+                            runfeatures = True
+                            for obj_or_subj in ['obj', 'subj']:
+                                for model_for_each_subj in [True, False]:
+                                    for is_second_learner in [True, False]:
+                                        for is_majority_vote in [False]:
+                                            for pca_per_axis in [True, False]:
+                                                for scale_predicted_y_by in ['org_clip','subj_id',None]:
 
-                run_segmentize=False, is_hl=True, segments_length=50,                                # to avoid hl start here
-                run_overlap=True, overlap_percent=20,
+                                                    f.write("%s, %s, %i, %s, %s, %s, %s, %s, %s, %s, %s, " %
+                                                            (str(hl_margins).replace(', ','-'), is_smart_hl, seg_len, ol_percent, bs[1],
+                                                             obj_or_subj,
+                                                             model_for_each_subj, is_second_learner, is_majority_vote,
+                                                             pca_per_axis, scale_predicted_y_by))
 
-                run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
-                is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS,
-                use_overlap=True,
+                                                    print("%s, smart=%s, seg_len=%i, ol=%s, %s, %s, model_for_each=%s, "
+                                                          "2nd_learner=%s, majority_vote=%s, pca_per_axis=%s, scale_predicted_y_by=%s" %
+                                                            (str(hl_margins).replace(', ','-'), is_smart_hl, seg_len, ol_percent, bs[1],
+                                                             obj_or_subj,
+                                                             model_for_each_subj, is_second_learner, is_majority_vote,
+                                                             pca_per_axis, scale_predicted_y_by))
 
-                run_learning=False, obj_or_subj='subj', is_hl_in_learning=True,
-                is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
+                                                    mega_runner(f, run_preprocessing=False, is_hl_in_preprocessing=False,
 
-                is_model_for_each_subject=False, to_drop_list=[], fs_models_list=FS_MODELS, fs_n_components_range=range(9,10),
-                learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-                is_second_learner=False,
+                                                                set_win_size=setwinsize, hl_margins=hl_margins, is_smart_hl=is_smart_hl,
 
-                is_majority_vote=True)                                     # to use is_majority_vote set obj_or_subj='obj'
+                                                                run_segmentize=runsegmentize, is_hl=True, segments_length=seg_len,
+
+                                                                run_overlap=runoverlap, overlap_percent=ol_percent,
+
+                                                                run_features=runfeatures, is_hl_in_features=True,
+                                                                create_moments_over_segmentized=False,
+                                                                is_slice_for_specific_blendshapes=True,
+                                                                which_blendshapes=bs[0], use_overlap=True if ol_percent > 0 else False,
+
+                                                                run_learning=True, obj_or_subj=obj_or_subj,
+                                                                is_hl_in_learning=True,
+                                                                is_both_for_obj=True, scale_y=True, scale_x=True,
+                                                                use_single_predicted_Y_foreach_clip=True,
+
+                                                                is_model_for_each_subject=model_for_each_subj,
+                                                                clip_drop_list=[], subj_drop_list=[],
+                                                                fs_models_list=FS_MODELS,
+                                                                fs_n_components_range=range(2, 10), pca_each_axis=pca_per_axis,
+                                                                learning_models_list=LEARNING_MODELS,
+                                                                ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
+                                                                is_second_learner=is_second_learner,
+
+                                                                is_majority_vote=is_majority_vote, scale_predicted_y_by=scale_predicted_y_by)
+
+                                                    setwinsize = False
+                                                    runsegmentize = False
+                                                    runoverlap = False
+                                                    runfeatures = False
+
+
+
+
+    f.close()
+    #
+    #
+    #
+    # mega_runner(open('dummy.csv', 'w'),
+    #             run_preprocessing=False, is_hl_in_preprocessing=False,
+    #
+    #             set_win_size=False, hl_margins=(3,1), is_smart_hl=False,
+    #
+    #             run_segmentize=False, is_hl=True, segments_length=50,                                # to avoid hl start here
+    #
+    #             run_overlap=False, overlap_percent=25,
+    #
+    #             run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+    #             is_slice_for_specific_blendshapes=True, which_blendshapes=BLENDSHAPES, use_overlap=True,
+    #
+    #             run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
+    #             is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
+    #
+    #             is_model_for_each_subject=True, clip_drop_list=[], subj_drop_list=[],
+    #             fs_models_list=FS_MODELS, fs_n_components_range=range(2,10),
+    #
+    #             pca_each_axis=True, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
+    #             is_second_learner=True,
+    #
+    #             is_majority_vote=False, scale_predicted_y_by='org_clip')

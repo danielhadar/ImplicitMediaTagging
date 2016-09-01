@@ -363,7 +363,7 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
         df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
         df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features_hl.pickle')
         all_features_df = pd.concat([df_moments, df_quantized, df_dynamic, df_misc], axis=1)
-        all_features_df.to_csv(CSV_FOLDER + '/all_features_df_hl.csv')
+        # all_features_df.to_csv(CSV_FOLDER + '/all_features_df_hl.csv')
         export_df_to_pickle(all_features_df, PICKLES_FOLDER + '/features/all_features_hl.pickle')
 
     else:       # not using hl

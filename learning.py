@@ -371,7 +371,7 @@ def drop_subjects(df, subjects_list):
 # - Implicit Media Tagging -
 # --------------------------
 
-def second_learner(df, cv_model_name, learning_model_name):
+def second_learner(df, cv_model_name, learning_model_name, model_for_each_subject):
     # df is results_df
     return_df = df.copy()
 
@@ -382,10 +382,10 @@ def second_learner(df, cv_model_name, learning_model_name):
     # df.drop(['predicted_mean', 'predicted_var'], axis=1, inplace=True)
 
     # Cross-Validation
-    if cv_model_name == 'LeaveSubjOut':
-        lpl = LeavePLabelOut(df.index.get_level_values('subj_id'), p=1)
-    elif cv_model_name == 'LeaveClipOut':
+    if cv_model_name == 'LeaveClipOut':
         lpl = LeavePLabelOut(df.index.get_level_values('org_clip'), p=1)
+    elif cv_model_name == 'LeaveSubjOut':
+        lpl = LeavePLabelOut(df.index.get_level_values('subj_id'), p=1)
     elif cv_model_name == 'LeaveOneClipOfSubj':
         lpl = LeavePLabelOut([str(i + '_' + str(j)) for i, j, k in df.index.tolist()], p=1)
 
@@ -393,7 +393,7 @@ def second_learner(df, cv_model_name, learning_model_name):
         # Train
         # train_labels = [i for i in set(feat_df.iloc[train_index,:].index.get_level_values('org_clip'))]
         y_train = df.ix[train_index, 'actual_y']
-        clf = run_learning(df.ix[train_index, ['predicted_mean', 'predicted_var']], y_train, learning_model_name, is_normalized=True)
+        clf = run_learning(df.ix[train_index, ['predicted_mean', 'predicted_var']], pd.to_numeric(y_train), learning_model_name, is_normalized=True)
         # Test
         test_labels = list_to_unique_list_preserve_order([(i, j) for i, j in df.ix[test_index, :].index.tolist()])
         predicted_y = clf.predict(df.ix[test_index, ['predicted_mean', 'predicted_var']])
@@ -485,7 +485,7 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
     # -- at this point done creating results_df --
 
     # second learner
-    results_df = second_learner(results_df, cv_model_name, learning_model_name) if is_second_learner else results_df
+    results_df = second_learner(results_df, cv_model_name, learning_model_name, model_for_each_subject) if is_second_learner else results_df
 
     return results_df
 

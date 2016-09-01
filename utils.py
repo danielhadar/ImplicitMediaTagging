@@ -33,7 +33,7 @@ DATA_FOLDER = PARENT_FOLDER + 'raw_and_rest_data/'
 PICKLES_FOLDER = PARENT_FOLDER + 'pickles/'
 CSV_FOLDER = PARENT_FOLDER + 'csv/'
 LOG_FOLDER = PARENT_FOLDER + 'logs/'
-# OBJECTIVE_FOLDER = '/Users/danielhadar/Documents/Thesis/ExperimentCode/metadata/subject rating PhaseA'
+OBJECTIVE_FOLDER = '/Users/danielhadar/Documents/Thesis/ExperimentCode/metadata/subject rating PhaseA'
 
 BLENDSHAPES = ['EyeBlink_L', 'EyeBlink_R', 'EyeSquint_L', 'EyeSquint_R', 'EyeDown_L', 'EyeDown_R', 'EyeIn_L', 'EyeIn_R',
                'EyeOpen_L', 'EyeOpen_R', 'EyeOut_L', 'EyeOut_R', 'EyeUp_L', 'EyeUp_R', 'BrowsD_L', 'BrowsD_R',

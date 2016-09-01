@@ -407,7 +407,7 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
         df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features.pickle')
         df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features.pickle')
         all_features_df = pd.concat([df_moments, df_quantized, df_dynamic, df_misc], axis=1)
-        all_features_df.to_csv(CSV_FOLDER + '/all_features_df.csv')
+        # all_features_df.to_csv(CSV_FOLDER + '/all_features_df.csv')
         export_df_to_pickle(all_features_df, PICKLES_FOLDER + '/features/all_features.pickle')
 
 

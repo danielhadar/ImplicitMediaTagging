@@ -43,21 +43,21 @@ def learning_load_all_dfs(use_hl=False, use_both_for_obj=False):
     return all_features_df, df_moments, df_quantized, df_dynamic, df_misc, objective_df, ratings_df, big5_df, raw_df, majority_df
 
 
-
 # --------------------------
 # --  Feature Selection   --
 # --------------------------
 
 def pca(pca_each_axis, df_to_pca, df_not_to_pca, fs_n_components):
     feat_arr = df_not_to_pca
+
     if pca_each_axis:
         for df in df_to_pca:
             feat_arr.append(pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(df), index=df.index))
         feat_df = pd.concat(feat_arr, axis=1)
     else:
         all_feat_df = pd.concat(df_to_pca, axis=1)
-        feat_df = pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(all_feat_df),
-                               index=all_feat_df.index)
+        feat_df = pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(all_feat_df), index=all_feat_df.index)
+
     return feat_df
 
 def feature_selection(X, fs_model_name, n_components=3):
@@ -425,13 +425,15 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
             [cur_y_df, cur_df_moments, cur_df_quantized, cur_df_dynamic, cur_df_misc] = [df.loc[[subj_id]] for df in [y_df, df_moments, df_quantized, df_dynamic, df_misc]]
 
             # PCA
-            feat_df = pca(pca_each_axis=True, df_to_pca=[cur_df_moments, cur_df_quantized, cur_df_dynamic],
+            feat_df = pca(pca_each_axis=pca_each_axis, df_to_pca=[cur_df_moments, cur_df_quantized, cur_df_dynamic],
                           df_not_to_pca=[cur_df_misc], fs_n_components=fs_n_components) if fs_model_name == 'pca' \
                 else pd.concat([cur_df_misc, cur_df_moments, cur_df_quantized, cur_df_dynamic], axis=1)
 
             # Add Y and Original Clip
             feat_df = add_y(add_original_clip(feat_df), cur_y_df, axis)
 
+            feat_df.to_csv('feat_df_NOTpcaeachaxis_test.csv')
+            quit()
             # Cross-Validation
             lpl = LeavePLabelOut(feat_df.index.get_level_values('org_clip'), p=1)
             for train_index, test_index in lpl:     # leave p clips out

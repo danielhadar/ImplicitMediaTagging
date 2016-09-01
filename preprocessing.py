@@ -329,11 +329,6 @@ def get_smart_hl_pivot_ind(data, hl_margins):
     # data is the 'watch' part of a single subject's single clip
     hl_win_size = sum(hl_margins)
 
-    # mouth frown left (42)
-    # mouth frown right (43)
-    # data.to_csv('d.csv')
-    # quit()
-
     # for each possible window:
     #   sum(for each au, average it's value)
     clip_len = int(data['time'].tail(1).values-data['time'].head(1).values)  # in seconds

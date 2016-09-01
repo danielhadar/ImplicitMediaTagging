@@ -152,97 +152,96 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
 
 if __name__ == '__main__':
 
-    # with open(LOG_FOLDER + 'log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
-    #     f.write("win size, smart hl, seg length, overlap, blendshapes, obj or subj, model for each subject, 2nd learner, majority vote, pca each axis, scale_by, V, , , , A, , , , L, , , , R, , , ,\n")
-    #
-    #     for hl_margins in [(5,1), (3,1)]:
-    #         for is_smart_hl in [True, False]:
-    #             setwinsize = True
-    #             for seg_len in [10,30,50]:
-    #                 runsegmentize = True
-    #                 for ol_percent in [0, 25, 50, 75]:
-    #                     runoverlap = True if ol_percent > 0 else False
-    #                     for bs in [(BLENDSHAPES, "all"), (MY_BS, "my")]:
-    #                         runfeatures = True
-    #                         for obj_or_subj in ['obj', 'subj']:
-    #                             for model_for_each_subj in [True, False]:
-    #                                 for is_second_learner in [True, False]:
-    #                                     for is_majority_vote in [False]:
-    #                                         for pca_per_axis in [True, False]:
-    #                                             for scale_predicted_y_by in ['org_clip','subj_id',None]:
-    #
-    #                                                 f.write("%s, %s, %i, %s, %s, %s, %s, %s, %s, %s, %s, " %
-    #                                                         (str(hl_margins).replace(', ','-'), is_smart_hl, seg_len, ol_percent, bs[1],
-    #                                                          obj_or_subj,
-    #                                                          model_for_each_subj, is_second_learner, is_majority_vote,
-    #                                                          pca_per_axis, scale_predicted_y_by))
-    #
-    #                                                 print("%s, smart=%s, seg_len=%i, ol=%s, %s, %s, model_for_each=%s, "
-    #                                                       "2nd_learner=%s, majority_vote=%s, pca_per_axis=%s, scale_predicted_y_by=%s" %
-    #                                                         (str(hl_margins).replace(', ','-'), is_smart_hl, seg_len, ol_percent, bs[1],
-    #                                                          obj_or_subj,
-    #                                                          model_for_each_subj, is_second_learner, is_majority_vote,
-    #                                                          pca_per_axis, scale_predicted_y_by))
-    #
-    #                                                 mega_runner(f, run_preprocessing=False, is_hl_in_preprocessing=False,
-    #
-    #                                                             set_win_size=setwinsize, hl_margins=hl_margins, is_smart_hl=is_smart_hl,
-    #
-    #                                                             run_segmentize=runsegmentize, is_hl=True, segments_length=seg_len,
-    #
-    #                                                             run_overlap=runoverlap, overlap_percent=ol_percent,
-    #
-    #                                                             run_features=runfeatures, is_hl_in_features=True,
-    #                                                             create_moments_over_segmentized=False,
-    #                                                             is_slice_for_specific_blendshapes=True,
-    #                                                             which_blendshapes=bs[0], use_overlap=True if ol_percent > 0 else False,
-    #
-    #                                                             run_learning=True, obj_or_subj=obj_or_subj,
-    #                                                             is_hl_in_learning=True,
-    #                                                             is_both_for_obj=True, scale_y=True, scale_x=True,
-    #                                                             use_single_predicted_Y_foreach_clip=True,
-    #
-    #                                                             is_model_for_each_subject=model_for_each_subj,
-    #                                                             clip_drop_list=[], subj_drop_list=[],
-    #                                                             fs_models_list=FS_MODELS,
-    #                                                             fs_n_components_range=range(2, 10), pca_each_axis=pca_per_axis,
-    #                                                             learning_models_list=LEARNING_MODELS,
-    #                                                             ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-    #                                                             is_second_learner=is_second_learner,
-    #
-    #                                                             is_majority_vote=is_majority_vote, scale_predicted_y_by=scale_predicted_y_by)
-    #
-    #                                                 setwinsize = False
-    #                                                 runsegmentize = False
-    #                                                 runoverlap = False
-    #                                                 runfeatures = False
-    #
-    #
-    #
-    #
-    # f.close()
+    with open(LOG_FOLDER + 'log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
+        f.write("win size, smart hl, seg length, overlap, blendshapes, obj or subj, model for each subject, 2nd learner, majority vote, pca each axis, scale_by, V, , , , A, , , , L, , , , R, , , ,\n")
+
+        for hl_margins in [(5,1), (3,1)]:
+            for is_smart_hl in [True, False]:
+                setwinsize = True
+                for seg_len in [10,30,50]:
+                    runsegmentize = True
+                    for ol_percent in [0, 25, 50, 75]:
+                        runoverlap = True if ol_percent > 0 else False
+                        for bs in [(BLENDSHAPES, "all"), (MY_BS, "my")]:
+                            runfeatures = True
+                            for obj_or_subj in ['obj', 'subj']:
+                                for model_for_each_subj in [True, False]:
+                                    for is_second_learner in [True, False]:
+                                        for is_majority_vote in [False, True]:
+                                            for pca_per_axis in [True, False]:
+                                                for scale_predicted_y_by in ['org_clip', 'subj_id', None]:
+
+                                                    f.write("%s, %s, %i, %s, %s, %s, %s, %s, %s, %s, %s, " %
+                                                            (str(hl_margins).replace(', ','-'), is_smart_hl, seg_len, ol_percent, bs[1],
+                                                             obj_or_subj,
+                                                             model_for_each_subj, is_second_learner, is_majority_vote,
+                                                             pca_per_axis, scale_predicted_y_by))
+
+                                                    mega_runner(f, run_preprocessing=False, is_hl_in_preprocessing=False,
+
+                                                                set_win_size=setwinsize, hl_margins=hl_margins, is_smart_hl=is_smart_hl,
+
+                                                                run_segmentize=runsegmentize, is_hl=True, segments_length=seg_len,
+
+                                                                run_overlap=runoverlap, overlap_percent=ol_percent,
+
+                                                                run_features=runfeatures, is_hl_in_features=True,
+                                                                create_moments_over_segmentized=False,
+                                                                is_slice_for_specific_blendshapes=True,
+                                                                which_blendshapes=bs[0], use_overlap=True if ol_percent > 0 else False,
+
+                                                                run_learning=True, obj_or_subj=obj_or_subj,
+                                                                is_hl_in_learning=True,
+                                                                is_both_for_obj=True, scale_y=True, scale_x=True,
+                                                                use_single_predicted_Y_foreach_clip=True,
+
+                                                                is_model_for_each_subject=model_for_each_subj,
+                                                                clip_drop_list=[], subj_drop_list=[],
+                                                                fs_models_list=FS_MODELS,
+                                                                fs_n_components_range=range(2, 10), pca_each_axis=pca_per_axis,
+                                                                learning_models_list=LEARNING_MODELS,
+                                                                ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
+                                                                is_second_learner=is_second_learner,
+
+                                                                is_majority_vote=is_majority_vote, scale_predicted_y_by=scale_predicted_y_by)
+
+                                                    print("%s, smart=%s, seg_len=%i, ol=%s, %s, %s, model_for_each=%s, "
+                                                          "2nd_learner=%s, majority_vote=%s, pca_per_axis=%s, scale_predicted_y_by=%s" %
+                                                          (str(hl_margins).replace(', ', '-'), is_smart_hl, seg_len,
+                                                           ol_percent, bs[1], obj_or_subj, model_for_each_subj, is_second_learner, is_majority_vote,
+                                                           pca_per_axis, scale_predicted_y_by))
+
+                                                    setwinsize = False
+                                                    runsegmentize = False
+                                                    runoverlap = False
+                                                    runfeatures = False
 
 
 
-    mega_runner(open('dummy.csv', 'w'),
-                run_preprocessing=False, is_hl_in_preprocessing=False,
 
-                set_win_size=False, hl_margins=(5,1), is_smart_hl=True,
-
-                run_segmentize=False, is_hl=True, segments_length=10,                                # to avoid hl start here
-
-                run_overlap=False, overlap_percent=25,
-
-                run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
-                is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=False,
-
-                run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
-                is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
-
-                is_model_for_each_subject=True, clip_drop_list=[], subj_drop_list=[],
-                fs_models_list=FS_MODELS, fs_n_components_range=range(2,10),
-
-                pca_each_axis=True, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-                is_second_learner=True,
-
-                is_majority_vote=True, scale_predicted_y_by='org_clip')
+    f.close()
+    #
+    #
+    #
+    # mega_runner(open('dummy.csv', 'w'),
+    #             run_preprocessing=False, is_hl_in_preprocessing=False,
+    #
+    #             set_win_size=False, hl_margins=(5,1), is_smart_hl=True,
+    #
+    #             run_segmentize=False, is_hl=True, segments_length=10,                                # to avoid hl start here
+    #
+    #             run_overlap=False, overlap_percent=25,
+    #
+    #             run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+    #             is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=False,
+    #
+    #             run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
+    #             is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
+    #
+    #             is_model_for_each_subject=True, clip_drop_list=[], subj_drop_list=[],
+    #             fs_models_list=FS_MODELS, fs_n_components_range=range(2,10),
+    #
+    #             pca_each_axis=True, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
+    #             is_second_learner=True,
+    #
+    #             is_majority_vote=True, scale_predicted_y_by='org_clip')

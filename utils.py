@@ -12,6 +12,7 @@ from math import isnan
 from scipy import cluster
 from sklearn.decomposition import PCA
 from sklearn.cross_validation import LeavePLabelOut
+from sklearn import cluster as sklearn_cluster
 import pandas as pd
 
 global SUBJECTS_IDS
@@ -280,10 +281,6 @@ def balanced_accuracy_score(actual, predicted):
     [[tn, fn],[fp, tp]] = confusion_matrix(predicted, actual)
 
     return (tp/(tp+fp) + tn/(tn+fn))/2
-
-def my_kmeans(col, n_quants=4, quantization_method='random'):
-    # implemented so quantization could be done using apply
-    return cluster.vq.kmeans2(col.values, n_quants, thresh=1e-02, minit=quantization_method, missing='warn')[1]
 
 def previous_and_next_iterator(iterable):
     # iterates over 'iterable' while allowing access to prev and next

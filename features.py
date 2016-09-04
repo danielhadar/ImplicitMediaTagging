@@ -119,10 +119,13 @@ def quantize_data_from_raw_df(raw_df, n_quants):
     # for each column (i.e. AU) quantize values using kmeans to n_quants values (0 - n-1).
 
     quantized_df = raw_df.copy().iloc[:,2:]
+
     for col in quantized_df:
         # skipping 'time' and 'is_locked', quantize each column (au) in relation to itself
-        # the quantization labels ([0] has the centroids)
-        quantized_df[col] = cluster.vq.kmeans2(quantized_df[col].values, k=n_quants, iter=300, thresh=1e-02, missing='warn')[1]
+        # the quantization labels ([0] has the centroids) - in the old one (kmeans2 by scipy. isn't deterministic as opposed to sklearn's when using kmeans++)
+        # quantized_df[col] = cluster.vq.kmeans2(quantized_df[col].values, k=n_quants, iter=300, thresh=1e-02, missing='warn')[1]
+
+        quantized_df[col] = sklearn_cluster.KMeans(n_clusters=n_quants, random_state=1).fit_predict(np.reshape(quantized_df[col].values, (-1,1)))
 
     return quantized_df
 
@@ -413,13 +416,14 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
 
 if __name__ == '__main__':
     ratings_df, big5_df, objective_df, raw_df, hl_df = load_all_dfs(org=False)
-    raw_df_no_slice = raw_df.copy()
-    hl_df_no_slice = hl_df.copy()
-    blink_df = count_blinks(hl_df_no_slice.xs('hl', level=2))
-    smile_df = count_smiles(hl_df_no_slice.xs('hl', level=2))
-    print(blink_df)
-    print('---------')
-    print(smile_df)
-    print('---------')
-    misc_df = pd.concat([blink_df, smile_df], axis=1)
-    print(misc_df)
+    ol_df = load_pickle_to_df(PICKLES_FOLDER + '/overlap_df.pickle')
+
+    hl_df = slice_features_df_for_specific_blendshapes(hl_df, MY_BS)
+
+    work_df = hl_df
+    work_df_no_slice = hl_df.copy()
+
+    work_df = ol_df
+    work_df_no_slice = ol_df.copy()
+
+    df = quantize_data_from_raw_df(work_df.xs('hl', level=2), 4)

@@ -224,19 +224,19 @@ if __name__ == '__main__':
     mega_runner(open('dummy.csv', 'w'),
                 run_preprocessing=False, is_hl_in_preprocessing=False,
 
-                set_win_size=False, hl_margins=(5,1), is_smart_hl=True,
+                set_win_size=True, hl_margins=(5,1), is_smart_hl=True,
 
-                run_segmentize=False, is_hl=True, segments_length=10,                                # to avoid hl start here
+                run_segmentize=True, is_hl=True, segments_length=10,                                # to avoid hl start here
 
-                run_overlap=False, overlap_percent=25,
+                run_overlap=True, overlap_percent=25,
 
-                run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+                run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
                 is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=False,
 
                 run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
 
-                is_model_for_each_subject=True, clip_drop_list=[], subj_drop_list=[],
+                is_model_for_each_subject=False, clip_drop_list=[], subj_drop_list=[],
                 fs_models_list=FS_MODELS, fs_n_components_range=range(6,7),
 
                 pca_each_axis=False, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,

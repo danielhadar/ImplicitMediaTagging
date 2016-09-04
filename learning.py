@@ -22,12 +22,6 @@ def learning_load_all_dfs(use_hl=False, use_both_for_obj=False):
         df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features.pickle')
         df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features.pickle')
 
-    # if slice_for_specific_blendshapes:
-    #     all_features_df = slice_features_df_for_specific_blendshapes(all_features_df, blendshapse)
-    #     df_moments = slice_features_df_for_specific_blendshapes(df_moments, blendshapse)
-    #     df_quantized = slice_features_df_for_specific_blendshapes(df_quantized, blendshapse)
-    #     df_dynamic = slice_features_df_for_specific_blendshapes(df_dynamic, blendshapse)
-
     if use_both_for_obj:
         objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective_both.pickle')
     else:

@@ -219,13 +219,13 @@ if __name__ == '__main__':
     mega_runner(open('dummy.csv', 'w'),
                 run_preprocessing=False, is_hl_in_preprocessing=False,
 
-                set_win_size=False, hl_margins=(5,1), is_smart_hl=True,
+                set_win_size=True, hl_margins=(5,1), is_smart_hl=True,
 
-                run_segmentize=False, is_hl=True, segments_length=30,                                # to avoid hl start here
+                run_segmentize=True, is_hl=True, segments_length=30,                                # to avoid hl start here
 
-                run_overlap=False, overlap_percent=25,
+                run_overlap=True, overlap_percent=25,
 
-                run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+                run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
                 is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=True,
 
                 run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,

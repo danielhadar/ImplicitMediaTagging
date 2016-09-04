@@ -187,8 +187,7 @@ if __name__ == '__main__':
 
                                                                 run_learning=True, obj_or_subj=obj_or_subj,
                                                                 is_hl_in_learning=True,
-                                                                is_both_for_obj=True, scale_y=True, scale_x=True,
-                                                                use_single_predicted_Y_foreach_clip=True,
+                                                                is_both_for_obj=True, scale_y=True,
 
                                                                 is_model_for_each_subject=model_for_each_subj,
                                                                 clip_drop_list=[], subj_drop_list=[],

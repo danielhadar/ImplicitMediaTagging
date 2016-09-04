@@ -35,12 +35,9 @@ FS_MODELS = ['pca']
 def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                 set_win_size, hl_margins, is_smart_hl, run_segmentize, is_hl, segments_length, run_overlap, overlap_percent,
                 run_features, is_hl_in_features, create_moments_over_segmentized, is_slice_for_specific_blendshapes, which_blendshapes,
-                use_overlap,
-                run_learning, obj_or_subj, is_hl_in_learning, is_both_for_obj, scale_y, scale_x, use_single_predicted_Y_foreach_clip,
+                use_overlap, run_learning, obj_or_subj, is_hl_in_learning, is_both_for_obj, scale_y,
                 is_model_for_each_subject, clip_drop_list, subj_drop_list, fs_models_list, fs_n_components_range, pca_each_axis,
                 learning_models_list, ratings_axes_list, cv_models_list, is_second_learner, is_majority_vote, scale_predicted_y_by):
-    # f.write("Start Time: %s\n" % datetime.now().strftime("%H:%M:%S"))
-
 
     print(" > Starting Preprocessing...")
     if run_preprocessing:
@@ -112,14 +109,12 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
                         max_df = [None, 0]
                         for fs_n_components in fs_n_components_range:
 
-                            results_df = implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, obj_or_subj=obj_or_subj,
-                                                                   scale_x = scale_x, model_for_each_subject=is_model_for_each_subject,
+                            results_df = implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df,
+                                                                   model_for_each_subject=is_model_for_each_subject,
                                                                    clip_drop_list=clip_drop_list, subj_drop_list=subj_drop_list, fs_model_name=fs_model_name,
                                                                    fs_n_components=fs_n_components, pca_each_axis=pca_each_axis, axis=axis,
                                                                    learning_model_name=learning_model_name, cv_model_name=cv_model_name,
-                                                                   is_second_learner=is_second_learner,
-                                                                   f=f, use_single_predicted_Y_foreach_clip=use_single_predicted_Y_foreach_clip,
-                                                                   corr_method=corr_method)
+                                                                   is_second_learner=is_second_learner)
 
                             # Scale predicted_y
                             results_df = scale_column_by(results_df, 'predicted_y', scale_predicted_y_by) if scale_predicted_y_by else results_df       # 'org_clip' or 'subj_id'
@@ -224,22 +219,22 @@ if __name__ == '__main__':
     mega_runner(open('dummy.csv', 'w'),
                 run_preprocessing=False, is_hl_in_preprocessing=False,
 
-                set_win_size=True, hl_margins=(5,1), is_smart_hl=True,
+                set_win_size=False, hl_margins=(5,1), is_smart_hl=True,
 
-                run_segmentize=True, is_hl=True, segments_length=10,                                # to avoid hl start here
+                run_segmentize=False, is_hl=True, segments_length=30,                                # to avoid hl start here
 
-                run_overlap=True, overlap_percent=25,
+                run_overlap=False, overlap_percent=25,
 
-                run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
-                is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=False,
+                run_features=False, is_hl_in_features=True, create_moments_over_segmentized=False,   # when using not_hl, do create_moments_over_segmentized==True
+                is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=True,
 
                 run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
-                is_both_for_obj=True, scale_y=True, scale_x=True, use_single_predicted_Y_foreach_clip=True,
+                is_both_for_obj=True, scale_y=True,
 
                 is_model_for_each_subject=False, clip_drop_list=[], subj_drop_list=[],
-                fs_models_list=FS_MODELS, fs_n_components_range=range(6,7),
+                fs_models_list=FS_MODELS, fs_n_components_range=range(2,20),
 
-                pca_each_axis=False, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
+                pca_each_axis=True, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
                 is_second_learner=True,
 
                 is_majority_vote=False, scale_predicted_y_by='org_clip')

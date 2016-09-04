@@ -232,7 +232,7 @@ if __name__ == '__main__':
                 is_both_for_obj=True, scale_y=True,
 
                 is_model_for_each_subject=False, clip_drop_list=[], subj_drop_list=[],
-                fs_models_list=FS_MODELS, fs_n_components_range=range(2,20),
+                fs_models_list=FS_MODELS, fs_n_components_range=range(2,10),
 
                 pca_each_axis=True, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
                 is_second_learner=True,

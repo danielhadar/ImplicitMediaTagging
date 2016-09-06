@@ -9,28 +9,28 @@ import dictionaries
 
 def learning_load_all_dfs(use_hl=False, use_both_for_obj=False):
     if use_hl:
-        all_features_df = load_pickle_to_df(PICKLES_FOLDER + '/features/all_features_hl.pickle')
-        df_moments = load_pickle_to_df(PICKLES_FOLDER + '/features/moments_features_hl.pickle')
-        df_quantized = load_pickle_to_df(PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
-        df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
-        df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features_hl.pickle')
+        all_features_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/all_features_hl.pickle')
+        df_moments = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/moments_features_hl.pickle')
+        df_quantized = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
+        df_dynamic = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
+        df_misc = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/misc_features_hl.pickle')
 
     else:
-        all_features_df = load_pickle_to_df(PICKLES_FOLDER + '/features/all_features.pickle')
-        df_moments = load_pickle_to_df(PICKLES_FOLDER + '/features/moments_features.pickle')
-        df_quantized = load_pickle_to_df(PICKLES_FOLDER + '/features/quantized_features.pickle')
-        df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features.pickle')
-        df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features.pickle')
+        all_features_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/all_features.pickle')
+        df_moments = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/moments_features.pickle')
+        df_quantized = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features.pickle')
+        df_dynamic = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/dynamic_features.pickle')
+        df_misc = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/misc_features.pickle')
 
     if use_both_for_obj:
-        objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective_both.pickle')
+        objective_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/objective_both.pickle')
     else:
-        objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
+        objective_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/objective.pickle')
 
-    majority_df = load_pickle_to_df(PICKLES_FOLDER + '/majority.pickle')
-    ratings_df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
-    big5_df = load_pickle_to_df(PICKLES_FOLDER + '/big5.pickle')
-    raw_df = load_pickle_to_df(PICKLES_FOLDER + '/raw.pickle')
+    majority_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/majority.pickle')
+    ratings_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/ratings.pickle')
+    big5_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/big5.pickle')
+    raw_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/raw.pickle')
 
     print(" > Done Loading!\n")
 

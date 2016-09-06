@@ -81,7 +81,7 @@ def calculate_big5_and_create_df_for_all_subjects():
 # This one works for each subject separately, by changing CUR_SUBJ id and REST_T0
 
 def get_resting_state_vid_to_df(subj_id, rest_t0):
-    # export_path: PICKLES_FOLDER+'/'+CUR_SUBJ+'_rest.pickle'
+    # export_path: dictionaries.PICKLES_FOLDER+'/'+CUR_SUBJ+'_rest.pickle'
 
     # get all columns and data
     full_rest_df = pd.read_csv(DATA_FOLDER+'/'+str(subj_id)+'_rest.txt',
@@ -296,32 +296,32 @@ def create_raw(is_hl):
             df = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df, use_hl=True,
                                                      to_segmentize=False, seg_length_in_frames=None,
                                                      hl_margins=None)
-            export_df_to_pickle(df, PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw.pickle')
+            export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw.pickle')
 
             # commented out, but could be used to compute moments over unsegmentized raw
             # df_unsegmentized = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df, use_hl=True,
             #                                          to_segmentize=False, seg_length_in_frames=seg_len,
             #                                          hl_margins=hl_margins)
-            # export_df_to_pickle(df_unsegmentized, PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')
+            # export_df_to_pickle(df_unsegmentized, dictionaries.PICKLES_FOLDER + '/raw/with_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')
         else:
             df = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df,
                                                          to_segmentize=False, seg_length_in_frames=None,
                                                          hl_margins=None)
-            export_df_to_pickle(df, PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw.pickle')
+            export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw.pickle')
 
             # df_unsegmentized = add_response_type_and_clip_id_to_raw_df(subj_df, clips_df,
             #                                              to_segmentize=False, seg_length_in_frames=seg_len,
             #                                              hl_margins=hl_margins)
-            # export_df_to_pickle(df_unsegmentized, PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')
+            # export_df_to_pickle(df_unsegmentized, dictionaries.PICKLES_FOLDER + '/raw/wo_hl/' + str(subj_id) + '_raw_unsegmentized.pickle')
 
     # > Stitch all raw DFs
     print(" ... Stiching all raw DFs ...")
     if is_hl:
         df = stitch_all_dfs_in_folder_together('/Volumes/MyPassport/phase_b/pickles/raw/with_hl')
-        export_df_to_pickle(df, PICKLES_FOLDER + '/org_raw_with_hl.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/org_raw_with_hl.pickle')
     else:
         df = stitch_all_dfs_in_folder_together('/Volumes/MyPassport/phase_b/pickles/raw/wo_hl')
-        export_df_to_pickle(df, PICKLES_FOLDER + '/org_raw.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/org_raw.pickle')
 
 
 def get_smart_hl_pivot_ind(data, hl_margins):
@@ -430,7 +430,7 @@ def set_window_size(hl_margins, is_smart_hl):
     raw_df.set_index(['response_type'], append=True, inplace=True)
     raw_df = raw_df.reorder_levels(['subj_id', 'clip_id', 'response_type'])
 
-    export_df_to_pickle(raw_df, PICKLES_FOLDER + '/org_raw_with_hl.pickle')
+    export_df_to_pickle(raw_df, dictionaries.PICKLES_FOLDER + '/org_raw_with_hl.pickle')
 
 def segmentize(seg_length, is_hl=True):
 
@@ -486,9 +486,9 @@ def segmentize(seg_length, is_hl=True):
 
     # export
     if is_hl:
-        export_df_to_pickle(df, PICKLES_FOLDER + '/raw_with_hl.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/raw_with_hl.pickle')
     else:
-        export_df_to_pickle(df, PICKLES_FOLDER + '/raw.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/raw.pickle')
 
 
 def add_overlap(overlap_percent, seg_length, is_hl=True):
@@ -523,7 +523,7 @@ def add_overlap(overlap_percent, seg_length, is_hl=True):
 
         dfs_array.append(new_df)
 
-    export_df_to_pickle(pd.concat([d for d in dfs_array]), PICKLES_FOLDER + '/overlap_df.pickle')
+    export_df_to_pickle(pd.concat([d for d in dfs_array]), dictionaries.PICKLES_FOLDER + '/overlap_df.pickle')
 
 
 if __name__ == '__main__':
@@ -536,7 +536,7 @@ if __name__ == '__main__':
     # 200398733 9              3        3     1        1            1
     #
     # df = get_ratings_data_and_create_df_for_all_subjects()
-    # export_df_to_pickle(df, PICKLES_FOLDER + '/ratings.pickle')
+    # export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/ratings.pickle')
 
     # This code segment was used to create ratings averages csv table to create objective-ratings-phaseA+B. This code
     #   creates averages/std just for phaseB, and phaseA was later added manually in excel:
@@ -548,9 +548,9 @@ if __name__ == '__main__':
     # clip_id
     # 1           4.04     2.96         2.62     2.27         1.04         1.00
     # df = get_objective_ratings(which_phase='both')
-    # export_df_to_pickle(df, PICKLES_FOLDER + '/objective_both.pickle')
+    # export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/objective_both.pickle')
     # df = get_objective_ratings(which_phase='just_a')
-    # export_df_to_pickle(df, PICKLES_FOLDER + '/objective.pickle')
+    # export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/objective.pickle')
 
 
     #   > BIG-5
@@ -559,7 +559,7 @@ if __name__ == '__main__':
     # 200398733       3.888889          3.444444         2.875         2.25        3.8
     #
     # df = calculate_big5_and_create_df_for_all_subjects()
-    # export_df_to_pickle(df, PICKLES_FOLDER + '/big5.pickle')
+    # export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/big5.pickle')
 
 
     #   > RESTING and RAW
@@ -577,17 +577,17 @@ if __name__ == '__main__':
     #     print("Pre-processing: " + str(subj_id))
     #     # resting
     #     df = get_resting_state_vid_to_df(subj_id, t0s[0])   # subj_id and rest_T0
-    #     export_df_to_pickle(df, PICKLES_FOLDER + '/rest/' + str(subj_id) + '_rest.pickle')
+    #     export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/rest/' + str(subj_id) + '_rest.pickle')
     #
     # raw
     # create_raw(is_hl=True)
 
     #   > Majority Vote subjects ratings
 
-    df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
+    df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/ratings.pickle')
 
     # objective
-    # majority_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
+    # majority_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/objective.pickle')
     # majority_df.drop(majority_df.columns[[4,5,6,7,8,9]], axis=1, inplace=True)
     # for idx, data in df.groupby(level=1):
     #     majority_df.loc[idx, 'valence'] = get_majoity(data.valence.tolist(), bin=True, th=df.valence.mean())
@@ -596,7 +596,7 @@ if __name__ == '__main__':
     #     majority_df.loc[idx, 'likeability'] = get_majoity(data.likeability.tolist(), bin=True, th=df.likeability.mean())
 
     # subjective
-    majority_df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
+    majority_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/ratings.pickle')
     majority_df.drop(majority_df.columns[[4]], axis=1, inplace=True)
     for idx, data in df.iterrows():
         majority_df.loc[idx, 'valence'] = 1 if data.valence>df.valence.mean() else 0
@@ -604,7 +604,7 @@ if __name__ == '__main__':
         majority_df.loc[idx, 'rewatch'] = 1 if data.rewatch>df.rewatch.mean() else 0
         majority_df.loc[idx, 'likeability'] = 1 if data.likeability>df.likeability.mean() else 0
 
-    export_df_to_pickle(majority_df, PICKLES_FOLDER + '/majority.pickle')
+    export_df_to_pickle(majority_df, dictionaries.PICKLES_FOLDER + '/majority.pickle')
 
     # --- RUN ONLY ONCE: end ---
 

@@ -31,7 +31,6 @@ PARENT_FOLDER = '/Volumes/MyPassport/phase_b/'      # change here where changing
 
 RATINGS_DIR = PARENT_FOLDER + 'subjects_ratings/'
 DATA_FOLDER = PARENT_FOLDER + 'raw_and_rest_data/'
-PICKLES_FOLDER = PARENT_FOLDER + 'pickles'
 CSV_FOLDER = PARENT_FOLDER + 'csv/'
 LOG_FOLDER = PARENT_FOLDER + 'logs/'
 OBJECTIVE_FOLDER = '/Users/danielhadar/Documents/Thesis/ExperimentCode/metadata/subject rating PhaseA'

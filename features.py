@@ -7,16 +7,16 @@ from scipy import stats as sp
 # --------------------------
 
 def load_all_dfs(org=False):
-    ratings_df = load_pickle_to_df(PICKLES_FOLDER + '/ratings.pickle')
-    big5_df = load_pickle_to_df(PICKLES_FOLDER + '/big5.pickle')
-    objective_df = load_pickle_to_df(PICKLES_FOLDER + '/objective.pickle')
+    ratings_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/ratings.pickle')
+    big5_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/big5.pickle')
+    objective_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/objective.pickle')
 
     if org:
-        raw_df = load_pickle_to_df(PICKLES_FOLDER + '/org_raw.pickle')
-        hl_df = load_pickle_to_df(PICKLES_FOLDER + '/org_raw_with_hl.pickle')
+        raw_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/org_raw.pickle')
+        hl_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/org_raw_with_hl.pickle')
     else:
-        raw_df = load_pickle_to_df(PICKLES_FOLDER + '/raw.pickle')
-        hl_df = load_pickle_to_df(PICKLES_FOLDER + '/raw_with_hl.pickle')
+        raw_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/raw.pickle')
+        hl_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/raw_with_hl.pickle')
 
     return ratings_df, big5_df, objective_df, raw_df, hl_df
 
@@ -302,7 +302,7 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
                     create_moments_over_hl=False, create_moments_over_segmentized=False, use_overlap=False):
 
     ratings_df, big5_df, objective_df, raw_df, hl_df = load_all_dfs(org=False)
-    ol_df = load_pickle_to_df(PICKLES_FOLDER + '/overlap_df.pickle')
+    ol_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/overlap_df.pickle')
 
     if slice_for_specific_bs:
         hl_df = slice_features_df_for_specific_blendshapes(hl_df, bs_list)
@@ -329,94 +329,94 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
             df = create_moments_df_from_raw_df(
                 work_df[work_df.index.get_level_values('response_type').isin(['watch', 'hl'])].reset_index(level=2, drop=True),
                 create_over_segmentized=create_moments_over_segmentized)
-        export_df_to_pickle(df, PICKLES_FOLDER + '/features/moments_features_hl.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/features/moments_features_hl.pickle')
 
         # -- quantized the data --
         print(" -- Quantized --")
         df = quantize_data_from_raw_df(work_df.xs('hl', level=2), 4)
-        export_df_to_pickle(df, PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
 
         # -- quantized features --
-        quantized_watch_df = load_pickle_to_df(PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
+        quantized_watch_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
         df = create_quantized_features(quantized_watch_df, 4)
-        export_df_to_pickle(df, PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
 
         # -- dynamic features (based on quantized data) --
         print(" -- Dynamic --")
-        quantized_watch_df = load_pickle_to_df(PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
+        quantized_watch_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/4-quantized_data_hl.pickle')
         transition_matrix_dict = create_transition_matrix_dict(quantized_watch_df, 4)
-        export_dict_to_pickle(transition_matrix_dict, PICKLES_FOLDER + '/transition_matrix_dict_hl.pickle')
+        export_dict_to_pickle(transition_matrix_dict, dictionaries.PICKLES_FOLDER + '/transition_matrix_dict_hl.pickle')
 
-        quantized_features_df = load_pickle_to_df(PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
-        transition_matrix_dict = load_pickle_to_dict(PICKLES_FOLDER + '/transition_matrix_dict_hl.pickle')
+        quantized_features_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
+        transition_matrix_dict = load_pickle_to_dict(dictionaries.PICKLES_FOLDER + '/transition_matrix_dict_hl.pickle')
         dynamic_features_df = create_dynamic_features(transition_matrix_dict, quantized_features_df)
-        export_df_to_pickle(dynamic_features_df, PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
+        export_df_to_pickle(dynamic_features_df, dictionaries.PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
 
         # -- miscellaneous features --
         print(" -- Miscellaneous --")
         blink_df = count_blinks(work_df_no_slice.xs('hl', level=2))
         smile_df = count_smiles(work_df_no_slice.xs('hl', level=2))
         misc_df = pd.concat([blink_df, smile_df], axis=1)
-        export_df_to_pickle(misc_df, PICKLES_FOLDER + '/features/misc_features_hl.pickle')
+        export_df_to_pickle(misc_df, dictionaries.PICKLES_FOLDER + '/features/misc_features_hl.pickle')
 
         # -- create all features df --
         print(" > Creating All Features DF")
-        df_moments = load_pickle_to_df(PICKLES_FOLDER + '/features/moments_features_hl.pickle')
-        df_quantized = load_pickle_to_df(PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
-        df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
-        df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features_hl.pickle')
+        df_moments = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/moments_features_hl.pickle')
+        df_quantized = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
+        df_dynamic = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
+        df_misc = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/misc_features_hl.pickle')
         all_features_df = pd.concat([df_moments, df_quantized, df_dynamic, df_misc], axis=1)
         # all_features_df.to_csv(CSV_FOLDER + '/all_features_df_hl.csv')
-        export_df_to_pickle(all_features_df, PICKLES_FOLDER + '/features/all_features_hl.pickle')
+        export_df_to_pickle(all_features_df, dictionaries.PICKLES_FOLDER + '/features/all_features_hl.pickle')
 
     else:       # not using hl
         # -- moments features --
         print(" > Starting Moments Features")
         df = create_moments_df_from_raw_df(raw_df.xs('watch', level=2), create_over_segmentized=create_moments_over_segmentized)
-        export_df_to_pickle(df, PICKLES_FOLDER + '/features/moments_features.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/features/moments_features.pickle')
 
         # -- quantized the data --
         print(" > Starting Quantized Features")
         df = quantize_data_from_raw_df(raw_df.xs('watch', level=2), 4)
-        export_df_to_pickle(df, PICKLES_FOLDER + '/4-quantized_data.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/4-quantized_data.pickle')
 
         # -- quantized features --
-        quantized_watch_df = load_pickle_to_df(PICKLES_FOLDER + '/4-quantized_data.pickle')
+        quantized_watch_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/4-quantized_data.pickle')
         df = create_quantized_features(quantized_watch_df, 4)
-        export_df_to_pickle(df, PICKLES_FOLDER + '/features/quantized_features.pickle')
+        export_df_to_pickle(df, dictionaries.PICKLES_FOLDER + '/features/quantized_features.pickle')
 
         # -- dynamic features (based on quantized data) --
         print(" > Starting Dynamic Features")
-        quantized_watch_df = load_pickle_to_df(PICKLES_FOLDER + '/4-quantized_data.pickle')
+        quantized_watch_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/4-quantized_data.pickle')
         transition_matrix_dict = create_transition_matrix_dict(quantized_watch_df, 4)
-        export_dict_to_pickle(transition_matrix_dict, PICKLES_FOLDER + '/transition_matrix_dict.pickle')
+        export_dict_to_pickle(transition_matrix_dict, dictionaries.PICKLES_FOLDER + '/transition_matrix_dict.pickle')
 
-        quantized_features_df = load_pickle_to_df(PICKLES_FOLDER + '/features/quantized_features.pickle')
-        transition_matrix_dict = load_pickle_to_dict(PICKLES_FOLDER + '/transition_matrix_dict.pickle')
+        quantized_features_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features.pickle')
+        transition_matrix_dict = load_pickle_to_dict(dictionaries.PICKLES_FOLDER + '/transition_matrix_dict.pickle')
         dynamic_features_df = create_dynamic_features(transition_matrix_dict, quantized_features_df)
-        export_df_to_pickle(dynamic_features_df, PICKLES_FOLDER + '/features/dynamic_features.pickle')
+        export_df_to_pickle(dynamic_features_df, dictionaries.PICKLES_FOLDER + '/features/dynamic_features.pickle')
 
         # -- miscellaneous features --
         print(" -- Miscellaneous --")
         blink_df = count_blinks(raw_df_no_slice.xs('watch', level=2))
         smile_df = count_smiles(raw_df_no_slice.xs('watch', level=2))
         misc_df = pd.concat([blink_df, smile_df], axis=1)
-        export_df_to_pickle(misc_df, PICKLES_FOLDER + '/features/misc_features.pickle')
+        export_df_to_pickle(misc_df, dictionaries.PICKLES_FOLDER + '/features/misc_features.pickle')
 
         # -- create all features df --
         print(" > Creating All Features DF")
-        df_moments = load_pickle_to_df(PICKLES_FOLDER + '/features/moments_features.pickle')
-        df_quantized = load_pickle_to_df(PICKLES_FOLDER + '/features/quantized_features.pickle')
-        df_dynamic = load_pickle_to_df(PICKLES_FOLDER + '/features/dynamic_features.pickle')
-        df_misc = load_pickle_to_df(PICKLES_FOLDER + '/features/misc_features.pickle')
+        df_moments = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/moments_features.pickle')
+        df_quantized = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features.pickle')
+        df_dynamic = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/dynamic_features.pickle')
+        df_misc = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/misc_features.pickle')
         all_features_df = pd.concat([df_moments, df_quantized, df_dynamic, df_misc], axis=1)
         # all_features_df.to_csv(CSV_FOLDER + '/all_features_df.csv')
-        export_df_to_pickle(all_features_df, PICKLES_FOLDER + '/features/all_features.pickle')
+        export_df_to_pickle(all_features_df, dictionaries.PICKLES_FOLDER + '/features/all_features.pickle')
 
 
 if __name__ == '__main__':
     ratings_df, big5_df, objective_df, raw_df, hl_df = load_all_dfs(org=False)
-    ol_df = load_pickle_to_df(PICKLES_FOLDER + '/overlap_df.pickle')
+    ol_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/overlap_df.pickle')
 
     hl_df = slice_features_df_for_specific_blendshapes(hl_df, MY_BS)
 

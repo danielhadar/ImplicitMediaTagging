@@ -3,6 +3,7 @@ from features import *
 from learning import *
 from time import time
 from datetime import datetime
+import sys
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -146,6 +147,13 @@ def mega_runner(f, run_preprocessing, is_hl_in_preprocessing,
 
 
 if __name__ == '__main__':
+
+    # for parallel running, run with different argv every time (none-2-3-4)
+    if len(sys.argv) == 3:
+        PICKLES_FOLDER += "/"
+    else:
+        run_id = sys.argv[-1]
+        PICKLES_FOLDER += str(run_id) + "/"
 
     with open(LOG_FOLDER + 'log_' + datetime.now().strftime("%Y%m%d-%H%M%S") + '.csv', 'w') as f:
         f.write("win size, smart hl, seg length, overlap, blendshapes, obj or subj, model for each subject, 2nd learner, majority vote, pca each axis, scale_by, V, , , , A, , , , L, , , , R, , , ,\n")

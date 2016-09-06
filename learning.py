@@ -424,8 +424,6 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
             # Add Y and Original Clip
             feat_df = add_y(add_original_clip(feat_df), cur_y_df, axis)
 
-            feat_df.to_csv('feat_df_NOTpcaeachaxis_test.csv')
-            quit()
             # Cross-Validation
             lpl = LeavePLabelOut(feat_df.index.get_level_values('org_clip'), p=1)
             for train_index, test_index in lpl:     # leave p clips out

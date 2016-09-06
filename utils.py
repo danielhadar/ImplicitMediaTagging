@@ -16,6 +16,7 @@ from sklearn import cluster as sklearn_cluster
 import pandas as pd
 
 global SUBJECTS_IDS
+global PICKLES_FOLDER
 
 def warn(*args, **kwargs):
     pass
@@ -30,7 +31,7 @@ PARENT_FOLDER = '/Volumes/MyPassport/phase_b/'      # change here where changing
 
 RATINGS_DIR = PARENT_FOLDER + 'subjects_ratings/'
 DATA_FOLDER = PARENT_FOLDER + 'raw_and_rest_data/'
-PICKLES_FOLDER = PARENT_FOLDER + 'pickles/'
+PICKLES_FOLDER = PARENT_FOLDER + 'pickles'
 CSV_FOLDER = PARENT_FOLDER + 'csv/'
 LOG_FOLDER = PARENT_FOLDER + 'logs/'
 OBJECTIVE_FOLDER = '/Users/danielhadar/Documents/Thesis/ExperimentCode/metadata/subject rating PhaseA'

@@ -1,6 +1,8 @@
 from preprocessing import *
 from utils import *
 from scipy import stats as sp
+import dictionaries
+
 
 # --------------------------
 # ---     Loadings       ---

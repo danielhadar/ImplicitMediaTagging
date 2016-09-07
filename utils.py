@@ -309,8 +309,10 @@ def add_y(df, y_df, axis):
         df.loc[clip, axis[0].strip()] = y_df.loc[clip, axis[0].strip()]
     return df.set_index('clip_id', append=True)
 
-def scale_column_by(df, column_name, scale_by):
+def scale_column_by(df, column_name, scale_by, is_majority_vote):
     df[column_name] = df.groupby(level=scale_by)[column_name].apply(scale)
+    if is_majority_vote:
+        df[column_name] = df[column_name].apply(np.round)
     return df
 
 if __name__ == '__main__':

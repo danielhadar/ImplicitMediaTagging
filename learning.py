@@ -339,8 +339,8 @@ def run_learning(X_train, Y_train, learning_model, is_normalized=False, args=[])
 
 def calculate_corr(actual_y, predicted_y, method):
 
-    if method == 'acc':     # r^2 is f1, corr is acc, p-value is bacc, MCC is 4th
-        return f1_score(actual_y, predicted_y), (accuracy_score(actual_y, predicted_y), balanced_accuracy_score(actual_y, predicted_y)), (matthews_corrcoef(actual_y, predicted_y), 0)
+    if method == 'acc':     # r^2 is f1, corr is MCC, p-value is bacc, ACC is 4th
+        return f1_score(actual_y, predicted_y), (matthews_corrcoef(actual_y, predicted_y), balanced_accuracy_score(actual_y, predicted_y)), (accuracy_score(actual_y, predicted_y), 0)
     else:
         if np.var(actual_y) == 0:
             return r2_score(actual_y, predicted_y), (0, pearsonr(actual_y, predicted_y)[1]), (se_of_regression(predicted_y, actual_y), 0) # 5 numbers

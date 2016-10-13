@@ -352,7 +352,7 @@ def create_features(use_hl=True, slice_for_specific_bs=False, bs_list=[],
         quantized_features_df = load_pickle_to_df(dictionaries.PICKLES_FOLDER + '/features/quantized_features_hl.pickle')
         transition_matrix_dict = load_pickle_to_dict(dictionaries.PICKLES_FOLDER + '/transition_matrix_dict_hl.pickle')
         dynamic_features_df = create_dynamic_features(transition_matrix_dict, quantized_features_df)
-        export_df_to_pickle(dynamic_features_df, dictionaries.PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
+        export_df_to_pickle(dynamic_features_df.reindex_axis(sorted(dynamic_features_df.columns), axis=1), dictionaries.PICKLES_FOLDER + '/features/dynamic_features_hl.pickle')
 
         # -- miscellaneous features --
         print(" -- Miscellaneous --")

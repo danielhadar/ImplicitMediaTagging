@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import dictionaries
 from scipy.stats import pearsonr
 from scipy.stats import spearmanr
 from scipy.stats import skew
@@ -26,8 +27,8 @@ warnings.warn = warn
 fps = 24
 NUM_CLIPS = 18
 
-PARENT_FOLDER = '/Volumes/MyPassport/phase_b/'      # change here where changing machine
-# PARENT_FOLDER = '/cs/img/danielhadar/'
+# PARENT_FOLDER = '/Volumes/MyPassport/phase_b/'      # change here where changing machine
+PARENT_FOLDER = '/cs/img/danielhadar/'
 
 RATINGS_DIR = PARENT_FOLDER + 'subjects_ratings/'
 DATA_FOLDER = PARENT_FOLDER + 'raw_and_rest_data/'
@@ -152,17 +153,33 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
+
 def export_df_to_pickle(df, export_path):
     df.to_pickle(export_path)
+
 
 def load_pickle_to_df(import_path):
     import pandas as pd
     return pd.read_pickle(import_path)
 
+
+def load_pickle_list_to_df(import_path, subj_id_and_axis):
+    import os
+    dfs = []
+
+    for dirname, dirnames, filenames in os.walk(import_path):
+        for filename in sorted(filenames):
+            if subj_id_and_axis in filename:
+                dfs.append(load_pickle_to_df(os.path.join(dirname, filename)))
+
+    return dfs
+
+
 def export_dict_to_pickle(dict, export_path):
     import pickle
     with open(export_path, 'wb') as handle:
         pickle.dump(dict, handle)
+
 
 def load_pickle_to_dict(import_path):
     import pickle
@@ -316,8 +333,39 @@ def scale_column_by(df, column_name, scale_by, is_majority_vote):
         df[column_name] = df[column_name].apply(np.round)
     return df
 
-if __name__ == '__main__':
-    mylist = ['banana', 'orange', 'apple', 'kiwi', 'tomato']
 
-    for previous, item, nxt in previous_and_next_iterator(mylist):
-        print("Item is now", item, "next is", nxt, "previous is", previous)
+def hl_win_location_table():
+    import pandas as pd
+    import numpy as np
+
+    df = pd.read_pickle(dictionaries.PICKLES_FOLDER + '/org_raw_with_hl.pickle')
+    res = pd.DataFrame(index=pd.MultiIndex(levels=[[], []], labels=[[], []], names=['subj_id', 'org_clip']), columns=['to_end', 'relative_to_start', 'relative_to_end'])
+
+    for subj in dictionaries.SUBJECTS_IDS:
+        for clip in dictionaries.CLIPS:
+            cur_df = df.loc[(subj,clip)]
+
+            start_watch = float(cur_df.loc['watch'].time.head(1).values)
+            # end_watch = float(cur_df.loc['watch'].time.tail(1).values)
+            end_watch = start_watch + dictionaries.CLIPS_AND_TIMES[clip]
+            start_hl = float(cur_df.loc['hl'].time.head(1).values)
+            end_hl = float(cur_df.loc['hl'].time.tail(1).values)
+
+            res.loc[(subj, clip), ['to_end', 'relative_to_start', 'relative_to_end']] = pd.Series([
+                end_watch - end_hl - 3,
+                (start_hl+3 - start_watch) / (end_watch - start_watch),
+                (end_watch - (end_hl+3)) / (end_watch - start_watch)
+            ]).values
+
+            # res.loc[(subj, clip), ['from_start', 'to_end', 'relative_to_start', 'relative_to_end']] = pd.Series([
+            #     float(cur_df.loc['hl'].time.head(1).values) - float(cur_df.loc['watch'].time.head(1).values),
+            #     float(cur_df.loc['watch'].time.tail(1).values) - float(cur_df.loc['hl'].time.tail(1).values),
+            #
+            #     float((float(cur_df.loc['hl'].time.head(1).values)+3 - float(cur_df.loc['watch'].time.head(1).values)) / (float(cur_df.loc['watch'].time.tail(1).values) - float(cur_df.loc['watch'].time.head(1).values))),
+            #     float((float(cur_df.loc['watch'].time.tail(1).values) - float(cur_df.loc['hl'].time.tail(1).values)-3) / (float(cur_df.loc['watch'].time.tail(1).values) - float(cur_df.loc['watch'].time.head(1).values)))
+            # ]).values
+
+    res.to_csv('hl_win_location.csv')
+
+if __name__ == '__main__':
+    hl_win_location_table()

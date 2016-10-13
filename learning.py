@@ -47,10 +47,13 @@ def pca(pca_each_axis, df_to_pca, df_not_to_pca, fs_n_components):
     if pca_each_axis:
         for df in df_to_pca:
             feat_arr.append(pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(df), index=df.index))
-        feat_df = pd.concat(feat_arr, axis=1)
     else:
-        all_feat_df = pd.concat(df_to_pca, axis=1)
-        feat_df = pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(all_feat_df), index=all_feat_df.index)
+        if df_to_pca:
+            all_feat_df = pd.concat(df_to_pca, axis=1)
+            feat_df = pd.DataFrame(PCA(n_components=fs_n_components).fit_transform(all_feat_df), index=all_feat_df.index)
+
+    if feat_arr:
+        feat_df = pd.concat(feat_arr, axis=1)
 
     return feat_df
 
@@ -410,7 +413,7 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
         [y_df, df_moments, df_quantized, df_dynamic, df_misc] = [drop_subjects(df, subj_drop_list) for df in
                                                                  [y_df, df_moments, df_quantized, df_dynamic, df_misc]]
     results_df = pd.DataFrame(index=pd.MultiIndex(levels=[[], []], labels=[[], []], names=['subj_id', 'org_clip']),
-                              columns=['predicted_y', 'actual_y', 'predicted_full', 'actual_full'])
+                              columns=['predicted_y', 'actual_y', 'predicted_full', 'actual_full', 'clf_coef', 'fs_n'])
 
     if model_for_each_subject:
         for subj_id in set(y_df.index.get_level_values(level='subj_id')):
@@ -420,6 +423,10 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
             feat_df = pca(pca_each_axis=pca_each_axis, df_to_pca=[cur_df_moments, cur_df_quantized, cur_df_dynamic],
                           df_not_to_pca=[cur_df_misc], fs_n_components=fs_n_components) if fs_model_name == 'pca' \
                 else pd.concat([cur_df_misc, cur_df_moments, cur_df_quantized, cur_df_dynamic], axis=1)
+
+            # feat_df = pca(pca_each_axis=pca_each_axis, df_to_pca=[],
+            #               df_not_to_pca=[cur_df_misc], fs_n_components=fs_n_components) if fs_model_name == 'pca' \
+            #     else pd.concat([cur_df_misc, cur_df_moments, cur_df_quantized, cur_df_dynamic], axis=1)
 
             # Add Y and Original Clip
             feat_df = add_y(add_original_clip(feat_df), cur_y_df, axis)
@@ -438,8 +445,8 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                 test_label = feat_df.iloc[test_index,:].index.get_level_values('org_clip').values[0]
                 predicted_y = clf.predict(feat_df.iloc[test_index,:-1])     # number of segments
                 actual_y = feat_df.iloc[test_index, -1].tolist()
-                results_df.loc[(subj_id, test_label), ['predicted_y', 'actual_y', 'predicted_full', 'actual_full']] \
-                    = pd.Series([np.median(predicted_y), actual_y[0], predicted_y, actual_y]).values
+                results_df.loc[(subj_id, test_label), ['predicted_y', 'actual_y', 'predicted_full', 'actual_full', 'clf_coef', 'fs_n']] \
+                    = pd.Series([np.median(predicted_y), actual_y[0], predicted_y, actual_y, clf.coef_, fs_n_components]).values
 
     else:       # NOT a model for each subject
         # PCA

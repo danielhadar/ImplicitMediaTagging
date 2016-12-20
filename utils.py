@@ -367,5 +367,211 @@ def hl_win_location_table():
 
     res.to_csv('hl_win_location.csv')
 
+# if __name__ == '__main__':
+#     # hl_win_location_table()
+#     import learning
+#     import re
+#     id_pattern = re.compile("\d{9}")
+#
+#     # for name in ['cv_results_df_valence_6.csv', 'cv_results_df_arousal_7.csv', 'cv_results_df_likeability_8.csv', 'cv_results_df_rewatch_9.csv']:
+#     for name in ['cv_results_df_valence_6.csv']:
+#     # for name in ['cv_results_df_arousal_7.csv']:
+#         f = open(LOG_FOLDER + name)
+#         all_predicted_y = []
+#         all_actual_y = []
+#
+#         for line in f:
+#             line = line.split(',')
+#
+#             if line[0] == '200398733':
+#                 arr = [float(line[2])]
+#             elif id_pattern.match(line[0]):
+#                 arr.append(float(line[2]))
+#
+#             if line[0] == '337835383':
+#                 # all_predicted_y.append([np.mean(arr), np.median(arr)])
+#                 all_predicted_y.append(np.mean(arr))
+#                 all_actual_y.append(float(line[3]))
+#
+#         print(name, pearsonr(all_actual_y, all_predicted_y))
+#
+#         pred = []
+#         act = []
+#         for idx in range(len(all_actual_y)):
+#             clf = learning.run_learning(all_predicted_y[:idx] + all_predicted_y[idx+1:], all_actual_y[:idx] + all_actual_y[idx+1:], 'linear_regression')
+#             pred.append(clf.predict(all_predicted_y[idx])[0])
+#             act.append(all_actual_y[idx])
+#         print(name, pearsonr(pred,act))
+
+def quantize_list(l, th, dist, env):
+    return_list = np.zeros(len(l))
+
+    if env:         # around *dist* from th gets '-1'
+        for idx, num in enumerate(l):
+            if num < (th-dist):
+                return_list[idx] = 0
+            elif num > (th+dist):
+                return_list[idx] = 1
+            else:
+                return_list[idx] = -1
+
+    else:
+        for idx, num in enumerate(l):
+            if num < th:
+                return_list[idx] = 0
+            else:
+                return_list[idx] = 1
+
+    return return_list
+
+
+def calc_binary_from_cv_output(path, filename, discard_middle, leave_subj_out=True):
+    import openpyxl
+
+    wb = openpyxl.load_workbook(path + filename)
+    # averages = {'V':np.zeros(3), 'A':np.zeros(3), 'L':np.zeros(3), 'R':np.zeros(3)}
+
+    for sheet_name in ['V', 'A', 'L', 'R']:
+        outliers = 0
+        print(sheet_name)
+        sheet = wb.get_sheet_by_name(sheet_name)
+        _ = sheet.cell(row=521 if leave_subj_out else 505, column=1, value='end')  # so iter_rows gets to final subject's last line
+
+        for idx, row in enumerate(sheet.iter_rows()):
+            if row[0].value == 'end':
+                break
+            elif row[0].value and not row[1].value:   # subject (w.l.o.g clip) identifier row: "10 50 True 0.695545117716 0.811028369751 311461917 (36)"
+                id = row[0].value.split(' ')[-1]
+                print(id)
+                chunk_start_idx = idx + 2
+                cur_actual = []
+                cur_predicted = []
+            elif row[0].value and row[1].value:     # within subj/clip
+                cur_actual.append(row[2].value)
+                cur_predicted.append(row[3].value)
+            else:                                   # new line <br> between subjects/clips
+                quantized_cur_actual = quantize_list(cur_actual, np.mean(cur_actual), np.std(cur_actual)/2, discard_middle)
+                quantized_cur_predicted = quantize_list(cur_predicted, np.mean(cur_predicted), np.std(cur_predicted)/2, False)
+                tp = 0
+                tn = 0
+                fp = 0
+                fn = 0
+
+                for i,j in enumerate(range(chunk_start_idx, idx+1)):
+                    y_actual = quantized_cur_actual[i]
+                    y_predicted = quantized_cur_predicted[i]
+                    _ = sheet.cell(row=j, column=6, value=y_actual)
+                    _ = sheet.cell(row=j, column=7, value=y_predicted)
+                    if y_predicted == -1 or y_actual == -1:
+                        outliers += 1
+                        continue
+                    elif y_actual == y_predicted == 1:
+                        tp += 1
+                    elif y_actual == y_predicted == 0:
+                        tn += 1
+                    elif y_actual > y_predicted:
+                        fp += 1
+                    else:
+                        fn += 1
+
+                print(tp, tn, fp, fn)
+                acc = (tp+tn)/(tp+tn+fp+fn)
+                # bacc = ((tp/(tp+fp))+(tn/(tn+fn)))/2
+                mcc = (tp*tn-fp*fn)/np.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))
+                _ = sheet.cell(row=j, column=8, value=acc)
+                # _ = sheet.cell(row=j, column=9, value=bacc)
+                _ = sheet.cell(row=j, column=10, value=mcc)
+
+        #         averages[sheet_name][0].append(acc)
+        #         averages[sheet_name][1].append(bacc)
+        #         averages[sheet_name][2].append(mcc)
+        #
+        # print(sheet_name)
+        # print(np.mean([i[0] for i in averages]))
+        # print(np.mean([i[1] for i in averages]))
+        # print(np.mean([i[2] for i in averages]))
+
+    wb.save(filename=path + 'binarization_after.xlsx')
+    print(outliers)
+
+
+
+
 if __name__ == '__main__':
-    hl_win_location_table()
+    # calc_binary_from_cv_output(LOG_FOLDER + '/obj_rank_leave_clip_out/notmodel4each/', 'for_binarization.xlsx', discard_middle=True, leave_subj_out=False)
+
+    import re
+    id_pattern = re.compile("\d{9}")
+
+    # for name in ['cv_results_df_valence_6.csv', 'cv_results_df_arousal_5.csv', 'cv_results_df_likeability_8.csv', 'cv_results_df_rewatch_9.csv']:       # obj
+    # for name in ['cv_results_df_valence_.csv', 'cv_results_df_arousal_2.csv', 'cv_results_df_likeability_3.csv', 'cv_results_df_rewatch_4.csv']:      # subj
+    for name in ['temp.csv']:      # subj
+        f = open(LOG_FOLDER + 'obj_rank_leave_clip_out/notmodel4each/' + name)
+        # f = open(LOG_FOLDER + 'subj_rank_leave_clip_out/normodel4each/' + name)
+        predicted = {}
+        actual = {}
+        all_predicted_y = []
+        all_actual_y = []
+
+
+        # average of correlations per subject (suitable for both obj and subj)
+        # for line in f:
+        #     line = line.split(',')
+        #
+        #     if line[0] in dictionaries.SUBJECTS_IDS:
+        #         try:
+        #             predicted[line[0]].append(float(line[2]))
+        #             actual[line[0]].append(float(line[3]))
+        #         except KeyError:
+        #             predicted[line[0]] = [float(line[2])]
+        #             actual[line[0]] = [float(line[3])]
+        #
+        # cur = []
+        # for key,val in predicted.items():
+        #     cur.append(pearsonr(val, actual[key])[0])
+        #
+        # print(name, np.mean(cur), np.std(cur))
+
+
+        # average predicted per clip and calculate correlations over all clips (suitable just for obj)
+        for line in f:
+            line = line.split(',')
+
+            if line[0] == '200398733':
+                if float(line[2]) != -1:
+                    arr = [float(line[2])]
+                else:
+                    arr = []
+            elif id_pattern.match(line[0]):
+                if float(line[2]) != -1:
+                    arr.append(float(line[2]))
+
+            if line[0] == '337835383':
+                # all_predicted_y.append(np.mean(arr))        # for pearson r
+                all_predicted_y.append(get_majoity(arr))      # for binary accuracy
+                all_actual_y.append(float(line[3]))
+
+        # for pearson r
+        print(np.std(all_predicted_y))
+        print(name, pearsonr(all_actual_y, all_predicted_y))
+
+        # for binary prediction
+        tp = 0
+        tn = 0
+        fp = 0
+        fn = 0
+
+        for idx in range(len(all_predicted_y)):
+            y_actual = all_actual_y[idx]
+            y_predicted = all_predicted_y[idx]
+            if y_actual == y_predicted == 1:
+                tp += 1
+            elif y_actual == y_predicted == 0:
+                tn += 1
+            elif y_actual > y_predicted:
+                fp += 1
+            else:
+                fn += 1
+
+        acc = (tp+tn)/(tp+tn+fp+fn)
+        print(acc)

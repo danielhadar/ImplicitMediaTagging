@@ -178,20 +178,29 @@ if __name__ == '__main__':
 
     # for parallel running, run with different argv every time (none-2-3-4)
     run_id = ""
-    if not sys.argv[-2].isnumeric():
+    if not sys.argv[-4].isnumeric():
         dictionaries.PICKLES_FOLDER += "/"
     else:
-        run_id = sys.argv[-2]
+        run_id = sys.argv[-4]
         dictionaries.PICKLES_FOLDER += str(run_id) + "/"
 
-    if sys.argv[-1] == 'v':
+    if sys.argv[-3] == 'v':
         RATINGS_AXES = [('valence    ',0)]
-    elif sys.argv[-1] == 'a':
+    elif sys.argv[-3] == 'a':
         RATINGS_AXES = [('arousal    ',1)]
-    elif sys.argv[-1] == 'l':
+    elif sys.argv[-3] == 'l':
         RATINGS_AXES = [('likeability',2)]
-    elif sys.argv[-1] == 'r':
+    elif sys.argv[-3] == 'r':
         RATINGS_AXES = [('rewatch    ',3)]
+
+    is_obj = True if sys.argv[-2] == 'obj' else False
+
+    if sys.argv[-1] == 'clip':
+        CV_MODELS = ['LeaveClipOut']
+    elif sys.argv[-1] == 'subject':
+        CV_MODELS = ['LeaveSubjOut']
+    elif sys.argv[-1] == 'clip_of_subject':
+        CV_MODELS = ['LeaveOneClipOfSubj']
 
 
     if run_type == 'massive':
@@ -336,89 +345,137 @@ if __name__ == '__main__':
 
 
     elif run_type == 'cross_validation':
-        setwinsize = True
-        with open(LOG_FOLDER + 'cv_log_' + datetime.now().strftime("%Y%m%d-%H%M%S_") + RATINGS_AXES[0][0].strip() + '.csv', 'w') as f:
-            f.write("seg length, overlap, pca each axis, result without, results with\n")
 
-            for subj_aside in dictionaries.SUBJECTS_IDS:        # leave subj aside
+        # << -- not part of actual code, just for checks, do remove -- >>
+
+        all_features_df, df_moments, df_quantized, df_dynamic, df_misc, objective_df, ratings_df, big5_df, raw_df, majority_df = \
+            learning_load_all_dfs(use_hl=True, use_both_for_obj=True)
+        # print(ratings_df)
+
+        # for axis in ['rewatch']:
+        for axis in ['valence', 'arousal', 'likeability', 'rewatch']:
+            print(axis)
+            arr_axis = []
+
+            for subj_id in dictionaries.SUBJECTS_IDS:
+                arr_averages = []
+                arr_actual = []
+
+                for clip_id in dictionaries.CLIPS:
+
+                    all_but = ratings_df.xs(clip_id, level='clip_id').drop([subj_id]).loc[:,axis].mean()
+                    subjs = float(ratings_df.xs([subj_id, clip_id], level=['subj_id','clip_id']).loc[:,axis])
+
+                    arr_averages.append(all_but)
+                    arr_actual.append(subjs)
+
+                corr = pearsonr(arr_actual, arr_averages)[0]
+
+                if not isnan(corr):
+                    arr_axis.append(corr)
+
+            print("%.3f, %.2f" % (np.mean(arr_axis), np.std(arr_axis)))
+
+        # << -- until here -- >>
+
+
+
+        quit()
+
+        with open(LOG_FOLDER + 'cv_log_' + datetime.now().strftime("%Y%m%d-%H%M%S_") + RATINGS_AXES[0][0].strip() + '.csv', 'w') as f:
+            f.write("seg length, overlap, pca each axis, is_smart_hl, scale_by, result without, results with\n")
+
+            # for subj_aside in dictionaries.SUBJECTS_IDS:        # leave subj aside
+            for clip_aside in dictionaries.CLIPS:
             # for subj_aside in dictionaries.SUBJECTS_IDS[::-1]:        # leave subj aside
             # for subj_aside in ['308476639']:
+
                 max_result = 0
                 best_pca = 0
                 best_params = [None, None, None]
 
-                for seg_len in [10,30,50]:
-                # for seg_len in [10]:
-                    runsegmentize = True
-                    # for ol_percent in [25]:
-                    for ol_percent in [0, 25, 50, 75]:
-                        runoverlap = True if ol_percent > 0 else False
-                        runfeatures = True
-                        for pca_per_axis in [True, False]:
-                        # for pca_per_axis in [True]:
+                for is_smart_hl in [True, False]:
+                    setwinsize = True
+                    for seg_len in [10,30,50]:
+                        runsegmentize = True
+                        for ol_percent in [0, 25, 50, 75]:
+                            runoverlap = True if ol_percent > 0 else False
+                            runfeatures = True
+                            for pca_per_axis in [True, False]:
+                                # for scale_predicted_y_by in ['org_clip', 'subj_id', None]:
+                                for scale_predicted_y_by in ['subj_id']:
 
-                            # run full run with all parameter on 25 others (w.o. subj_aside)
-                            [_, cur_result_wo, _, _], _, _, best_local_pca = mega_runner(str(run_id), None, run_preprocessing=False, is_hl_in_preprocessing=False,
-                            set_win_size=setwinsize, hl_margins=(5,1), is_smart_hl=True,
-                            run_segmentize=runsegmentize, is_hl=True, segments_length=seg_len,
-                            run_overlap=runoverlap, overlap_percent=ol_percent,
-                            run_features=runfeatures, is_hl_in_features=True, create_moments_over_segmentized=False,
-                            is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=True if ol_percent > 0 else False,
-                            run_learning=True, obj_or_subj='obj', is_hl_in_learning=True,
-                            is_both_for_obj=True, scale_y=True,
-                            is_model_for_each_subject=True, clip_drop_list=[], subj_drop_list=[subj_aside],
-                            fs_models_list=FS_MODELS, fs_n_components_range=range(2,20),
-                            pca_each_axis=pca_per_axis, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-                            is_second_learner=True, is_majority_vote=False, scale_predicted_y_by='org_clip')
+                                    # run full run with all parameter on 25 others (w.o. subj_aside)
+                                    [_, cur_result_wo, _, _], _, _, best_local_pca = mega_runner(str(run_id), None, run_preprocessing=False, is_hl_in_preprocessing=False,
+                                    set_win_size=setwinsize, hl_margins=(5,1), is_smart_hl=is_smart_hl,
+                                    run_segmentize=runsegmentize, is_hl=True, segments_length=seg_len,
+                                    run_overlap=runoverlap, overlap_percent=ol_percent,
+                                    run_features=runfeatures, is_hl_in_features=True, create_moments_over_segmentized=False,
+                                    is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=True if ol_percent > 0 else False,
+                                    run_learning=True, obj_or_subj='obj' if is_obj else 'subj', is_hl_in_learning=True,
+                                    is_both_for_obj=True, scale_y=True,
+                                    # is_model_for_each_subject=False, clip_drop_list=[], subj_drop_list=[subj_aside],
+                                    is_model_for_each_subject=False, clip_drop_list=[clip_aside], subj_drop_list=[],
+                                    fs_models_list=FS_MODELS, fs_n_components_range=range(2,20),
+                                    pca_each_axis=pca_per_axis, learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
+                                    is_second_learner=True, is_majority_vote=False, scale_predicted_y_by=scale_predicted_y_by)
+                                    # is_second_learner=True, is_majority_vote=False, scale_predicted_y_by=None)
 
-                            runsegmentize = False
-                            runoverlap = False
-                            runfeatures = False
-                            setwinsize = False
+                                    runsegmentize = False
+                                    runoverlap = False
+                                    runfeatures = False
+                                    setwinsize = False
 
-                            # take parameters from best run
-                            print(cur_result_wo)
-                            if cur_result_wo > max_result:
-                                max_result = cur_result_wo
-                                best_params = [seg_len, ol_percent, pca_per_axis]
-                                best_pca = best_local_pca
-                                print("new results won: " + str(max_result))
+                                    # take parameters from best run
+                                    print(cur_result_wo)
+                                    if cur_result_wo > max_result:
+                                        max_result = cur_result_wo
+                                        best_params = [seg_len, ol_percent, pca_per_axis, is_smart_hl, scale_predicted_y_by]
+                                        best_pca = best_local_pca
+                                        print("new results won: " + str(max_result))
 
                 # run full run with parameters - train set in 25 others and test is subj-aside
-                print(",.-^-.,-^-.,-^-.,-^-.,-^-., Done Validating, Running Last Subject ,.-^-.,-^-.,-^-.,-^-.,-^-.,   " + subj_aside)
+                # print(",.-^-.,-^-.,-^-.,-^-.,-^-., Done Validating, Running Last Subj ,.-^-.,-^-.,-^-.,-^-.,-^-.,   " + subj_aside)
+                print(",.-^-.,-^-.,-^-.,-^-.,-^-., Done Validating, Running Last Clip ,.-^-.,-^-.,-^-.,-^-.,-^-.,   " + str(clip_aside))
                 print("with parameters: " + str(best_params) + ' ' + str(best_pca))
 
                 _, results_df, [df_moments, df_quantized, df_dynamic, df_misc], _ = mega_runner(str(run_id), None, run_preprocessing=False, is_hl_in_preprocessing=False,
-                set_win_size=True, hl_margins=(5,1), is_smart_hl=True,
+                set_win_size=True, hl_margins=(5,1), is_smart_hl=best_params[3],
                 run_segmentize=True, is_hl=True, segments_length=best_params[0],
                 run_overlap=True if best_params[1] > 0 else False, overlap_percent=best_params[1],
                 run_features=True, is_hl_in_features=True, create_moments_over_segmentized=False,
                 is_slice_for_specific_blendshapes=True, which_blendshapes=MY_BS, use_overlap=True,
-                run_learning=True, obj_or_subj='subj', is_hl_in_learning=True,
+                run_learning=True, obj_or_subj='obj' if is_obj else 'subj', is_hl_in_learning=True,
                 is_both_for_obj=True, scale_y=True,
-                is_model_for_each_subject=True, clip_drop_list=[], subj_drop_list=[],
+                is_model_for_each_subject=False, clip_drop_list=[], subj_drop_list=[],
                 fs_models_list=FS_MODELS, fs_n_components_range=range(best_pca,best_pca+1),     # good PCA!
                 # fs_models_list=FS_MODELS, fs_n_components_range=range(2,20),                  # bad PCA!
                 pca_each_axis=best_params[2], learning_models_list=LEARNING_MODELS, ratings_axes_list=RATINGS_AXES, cv_models_list=CV_MODELS,
-                is_second_learner=False, is_majority_vote=False, scale_predicted_y_by='org_clip')
+                is_second_learner=True, is_majority_vote=False, scale_predicted_y_by=best_params[4])
+                # is_second_learner=True, is_majority_vote=False, scale_predicted_y_by=None)
 
-                df_subj_slice = results_df.loc[results_df.index.get_level_values('subj_id') == subj_aside]
+                # df_subj_slice = results_df.loc[results_df.index.get_level_values('subj_id') == subj_aside]
+                df_subj_slice = results_df.loc[results_df.index.get_level_values('org_clip') == clip_aside]
                 r2, (pearsonr_val, pearsonr_p_val), (spearman_val, spearman_p_val) = calculate_corr(df_subj_slice.actual_y.tolist(), df_subj_slice.predicted_y.tolist(), method='normal')
                 subjects_corr = [r2, pearsonr_val, pearsonr_p_val, spearman_val]
 
                 # write to file: parameters, results of 25-run and final result
-                f.write("%s, %s, %s, %s, %s, %s, %s\n" % (str(best_params[0]), str(best_params[1]), best_params[2], str(max_result), str(subjects_corr[1]), str(best_pca), subj_aside))
+                # f.write("%s, %s, %s, %s, %s, %s, %s, %s, %s\n" % (str(best_params[0]), str(best_params[1]), best_params[2], best_params[3], str(best_params[4]), str(max_result), str(subjects_corr[1]), str(best_pca), subj_aside))
+                f.write("%s, %s, %s, %s, %s, %s, %s, %s, %s\n" % (str(best_params[0]), str(best_params[1]), best_params[2], best_params[3], str(best_params[4]), str(max_result), str(subjects_corr[1]), str(best_pca), str(clip_aside)))
                 f.flush()
                 os.fsync(f)
 
                 fd = open(LOG_FOLDER + 'cv_results_df_' + RATINGS_AXES[0][0].strip() + '_' + str(run_id) + '.csv', 'a')
-                fd.write('\n' + str(best_params[0]) + ' ' + str(best_params[1]) + ' ' + str(best_params[2]) + ' ' + str(max_result) + ' ' + str(subjects_corr[1]) + ' ' + subj_aside + '\n')
+                # fd.write('\n' + str(best_params[0]) + ' ' + str(best_params[1]) + ' ' + str(best_params[2]) + ' ' + str(best_params[3]) + ' ' + str(best_params[4]) + ' ' + str(max_result) + ' ' + str(subjects_corr[1]) + ' ' + subj_aside + '\n')
+                fd.write('\n' + str(best_params[0]) + ' ' + str(best_params[1]) + ' ' + str(best_params[2]) + ' ' + str(best_params[3]) + ' ' + str(best_params[4]) + ' ' + str(max_result) + ' ' + str(subjects_corr[1]) + ' ' + str(clip_aside) + '\n')
                 fd.close()
                 df_subj_slice.to_csv(LOG_FOLDER + 'cv_results_df_' + RATINGS_AXES[0][0].strip() + '_' + str(run_id) + '.csv', mode='a', header=False)
 
-                for idx, df in enumerate([df_moments, df_quantized, df_dynamic, df_misc]):  # save dfs to reconstruct - give dfs straight to implicit_media_tagigng (if run isn't deterministic)
-                    export_df_to_pickle(df, LOG_FOLDER + 'subj_dfs/' + subj_aside + '_' + RATINGS_AXES[0][0].strip() + '_' + str(run_id) + '_' + str(idx) + '.pkl')
+                # for idx, df in enumerate([df_moments, df_quantized, df_dynamic, df_misc]):  # save dfs to reconstruct - give dfs straight to implicit_media_tagigng (if run isn't deterministic)
+                    # export_df_to_pickle(df, LOG_FOLDER + 'subj_dfs/' + subj_aside + '_' + RATINGS_AXES[0][0].strip() + '_' + str(run_id) + '_' + str(idx) + '.pkl')
+                    # export_df_to_pickle(df, LOG_FOLDER + 'subj_dfs/' + str(clip_aside) + '_' + RATINGS_AXES[0][0].strip() + '_' + str(run_id) + '_' + str(idx) + '.pkl')
 
-                print(str(best_params[0]), str(best_params[1]), str(best_params[2]), str(max_result), str(subjects_corr[1]), subj_aside)
+                # print(str(best_params[0]), str(best_params[1]), str(best_params[2]), str(best_params[3]), str(best_params[4]), str(max_result), str(subjects_corr[1]), subj_aside)
+                print(str(best_params[0]), str(best_params[1]), str(best_params[2]), str(max_result), str(subjects_corr[1]), str(clip_aside))
 
         f.close()

@@ -424,6 +424,7 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
                           df_not_to_pca=[cur_df_misc], fs_n_components=fs_n_components) if fs_model_name == 'pca' \
                 else pd.concat([cur_df_misc, cur_df_moments, cur_df_quantized, cur_df_dynamic], axis=1)
 
+            # ... DESIGNATED for alanysis of feature type ...
             # feat_df = pca(pca_each_axis=pca_each_axis, df_to_pca=[],
             #               df_not_to_pca=[cur_df_misc], fs_n_components=fs_n_components) if fs_model_name == 'pca' \
             #     else pd.concat([cur_df_misc, cur_df_moments, cur_df_quantized, cur_df_dynamic], axis=1)
@@ -478,8 +479,8 @@ def implicit_media_tagging(df_moments, df_quantized, df_dynamic, df_misc, y_df, 
             if cv_model_name in {'LeaveSubjOut', 'LeaveClipOut', 'LeaveOneClipOfSubj'}:
                 for idx, (subj_id, org_clip) in enumerate(test_labels):
                     # possible to scale predicted_y here
-                    results_df.loc[(subj_id, org_clip), ['predicted_y', 'actual_y', 'predicted_full', 'actual_full']] \
-                        = pd.Series([np.median(predicted_y[idx:idx + seg_size]), actual_y[idx * seg_size], predicted_y[idx:idx+seg_size], actual_y[idx:idx+seg_size]]).values
+                    results_df.loc[(subj_id, org_clip), ['predicted_y', 'actual_y', 'predicted_full', 'actual_full',  'clf_coef', 'fs_n']] \
+                        = pd.Series([np.median(predicted_y[idx:idx + seg_size]), actual_y[idx * seg_size], predicted_y[idx:idx+seg_size], actual_y[idx:idx+seg_size], clf.coef_, fs_n_components]).values
 
     # -- at this point done creating results_df --
 
